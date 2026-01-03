@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build && mkdir -p public && echo '{}' > public/index.html"
+  command = "npm run build && cp public/index.html netlify/functions/"
   functions = "netlify/functions"
   publish = "public"
 
@@ -7,13 +7,13 @@
   NODE_VERSION = "24.12.0"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
+  from = "/irrigation/*"
+  to = "/.netlify/functions/api/irrigation/:splat"
   status = 200
 
 [[redirects]]
-  from = "/*"
-  to = "/.netlify/functions/api"
+  from = "/api-docs"
+  to = "/.netlify/functions/api/api-docs"
   status = 200
 
 [functions]
