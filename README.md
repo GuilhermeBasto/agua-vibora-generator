@@ -106,7 +106,7 @@ npm start
 Downloads the complete irrigation schedule with times.
 
 ```http
-GET /download-full-agenda?year=2025&format=xlsx
+GET /irrigation/download-full-agenda?year=2025&format=xlsx
 ```
 
 **Query Parameters:**
@@ -118,7 +118,7 @@ GET /download-full-agenda?year=2025&format=xlsx
 Downloads a blank schedule template without irrigation times.
 
 ```http
-GET /download-template?year=2025&format=xlsx
+GET /irrigation/download-template?year=2025&format=xlsx
 ```
 
 **Query Parameters:**
@@ -130,7 +130,7 @@ GET /download-template?year=2025&format=xlsx
 Downloads the schedule as an iCalendar file for import into Google Calendar or other calendar applications.
 
 ```http
-GET /download-calendar?year=2025
+GET /irrigation/download-calendar?year=2025
 ```
 
 **Query Parameters:**

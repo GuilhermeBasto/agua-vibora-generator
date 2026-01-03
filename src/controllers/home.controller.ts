@@ -1,0 +1,243 @@
+import { Request, Response } from 'express';
+
+/**
+ * Home page controller
+ */
+export const getHomePage = (req: Request, res: Response): void => {
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Água Víbora Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .feature h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+        .villages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .region {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .region h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+        .region ul {
+            list-style: none;
+        }
+        .region li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .region li:last-child {
+            border-bottom: none;
+        }
+        .endpoints {
+            margin-top: 20px;
+        }
+        .endpoint {
+            background: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+        .endpoint h3 {
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .endpoint code {
+            background: #fff;
+            padding: 10px;
+            display: block;
+            border-radius: 4px;
+            margin: 10px 0;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+        .api-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .api-link:hover {
+            background: #764ba2;
+        }
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💧 Água Víbora Generator</h1>
+            <p class="subtitle">Irrigation Schedule Management System</p>
+        </header>
+        
+        <div class="content">
+            <div class="section">
+                <h2>About</h2>
+                <p>A Node.js/TypeScript API for generating irrigation schedules for the Água de Víbora irrigation system. This application generates schedules for multiple villages in the Torre and Santo-António regions, with support for exporting in various formats.</p>
+            </div>
+
+            <div class="section">
+                <h2>Features</h2>
+                <div class="features">
+                    <div class="feature">
+                        <h3>🔄 Automatic Generation</h3>
+                        <p>Creates irrigation schedules based on yearly rotation patterns</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🏘️ Multi-Village Support</h3>
+                        <p>Manages schedules for 11 different villages across two regions</p>
+                    </div>
+                    <div class="feature">
+                        <h3>📄 Multiple Formats</h3>
+                        <p>Export in PDF, Excel (.xlsx), CSV, and iCalendar (.ics) formats</p>
+                    </div>
+                    <div class="feature">
+                        <h3>📅 Year-Based Rotation</h3>
+                        <p>Automatically adjusts schedules based on odd/even years</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Villages Covered</h2>
+                <div class="villages">
+                    <div class="region">
+                        <h3>Torre Region</h3>
+                        <ul>
+                            <li>Torre</li>
+                            <li>Crasto</li>
+                            <li>Passo</li>
+                            <li>Ramada</li>
+                            <li>Figueiredo</li>
+                            <li>Redondinho</li>
+                        </ul>
+                    </div>
+                    <div class="region">
+                        <h3>Santo-António Region</h3>
+                        <ul>
+                            <li>Casa Nova</li>
+                            <li>Eirô</li>
+                            <li>Cimo de Aldeia</li>
+                            <li>Portela</li>
+                            <li>Casa de Baixo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>API Endpoints</h2>
+                <div class="endpoints">
+                    <div class="endpoint">
+                        <h3>Download Full Agenda</h3>
+                        <code>GET /irrigation/download-full-agenda?year=2025&format=xlsx</code>
+                        <p>Downloads the complete irrigation schedule with times</p>
+                    </div>
+                    <div class="endpoint">
+                        <h3>Download Template</h3>
+                        <code>GET /irrigation/download-template?year=2025&format=xlsx</code>
+                        <p>Downloads a blank schedule template without irrigation times</p>
+                    </div>
+                    <div class="endpoint">
+                        <h3>Download Calendar</h3>
+                        <code>GET /irrigation/download-calendar?year=2025</code>
+                        <p>Downloads the schedule as iCalendar (.ics) for Google Calendar</p>
+                    </div>
+                </div>
+                <a href="/api-docs" class="api-link">📖 View API Documentation</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>&copy; ${new Date().getFullYear()} Água Víbora Generator - Irrigation Schedule Management</p>
+        </footer>
+    </div>
+</body>
+</html>
+  `;
+
+  res.send(html);
+};

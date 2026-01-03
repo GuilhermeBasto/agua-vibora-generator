@@ -96,6 +96,7 @@ const sendScheduleFile = async (
   filenamePrefix: string,
   isTemplate: boolean = false,
 ): Promise<void> => {
+  
   if (format === 'pdf') {
     const doc = generateSchedulePDF(year, isTemplate);
     sendPDF(res, doc, `${filenamePrefix}-${year}.pdf`);

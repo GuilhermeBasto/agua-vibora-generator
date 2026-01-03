@@ -2,9 +2,12 @@ import createError from 'http-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import swaggerUi from 'swagger-ui-express';
 
+import homeRouter from './routes/home.routes';
 import scheduleRouter from './routes/schedule.routes';
 import { errorHandler } from './middlewares/errorHandler';
+import { swaggerSpec } from './config/swagger';
 
 const app = express();
 
@@ -13,7 +16,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use('/', scheduleRouter);
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Routes
+app.use('/', homeRouter);
+app.use('/irrigation', scheduleRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req: Request, res: Response, next: NextFunction) {
