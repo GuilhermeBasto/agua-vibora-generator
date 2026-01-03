@@ -1,5 +1,6 @@
 import createError from 'http-errors';
 import express, { Request, Response, NextFunction } from 'express';
+import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import swaggerUi from 'swagger-ui-express';
@@ -16,8 +17,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Serve static files for Swagger UI
+const publicPath = path.join(__dirname, '..', 'public');
+app.use('/public', express.static(publicPath));
+
+// Swagger documentation with custom CSS
+const swaggerOptions = {
+  customCssUrl: '/public/swagger-ui.css',
+  customSiteTitle: 'Água Víbora Generator - API Documentation'
+};
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
 // Routes
 app.use('/', homeRouter);
