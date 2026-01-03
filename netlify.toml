@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm run build && mkdir -p public && echo '{}' > public/index.html"
   functions = "netlify/functions"
   publish = "public"
 
