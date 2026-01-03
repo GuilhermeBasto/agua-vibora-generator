@@ -21,10 +21,14 @@ app.use(cookieParser());
 const publicPath = path.join(__dirname, '..', 'public');
 app.use('/public', express.static(publicPath));
 
-// Swagger documentation with custom CSS
+// Swagger documentation with custom CSS and static assets
 const swaggerOptions = {
   customCssUrl: '/public/swagger-ui.css',
-  customSiteTitle: 'Água Víbora Generator - API Documentation'
+  customSiteTitle: 'Água Víbora Generator - API Documentation',
+  customJs: [
+    '/public/swagger-ui-bundle.js',
+    '/public/swagger-ui-standalone-preset.js'
+  ]
 };
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
