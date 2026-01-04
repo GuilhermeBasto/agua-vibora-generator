@@ -16,42 +16,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Serve static files from public directory (must be before other routes to serve index.html)
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Swagger API documentation (available in all environments)
 app.use(
   '/api-docs', 
   swaggerUi.serve, 
-  swaggerUi.setup(swaggerDocs, {
-    customSiteTitle: 'Água de Víbora API',
-    customCss: '.swagger-ui .topbar { display: none }'
-  })
+  swaggerUi.setup(swaggerDocs)
 );
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
+app.get('/api',homeRouter)
 
-// Routes
-app.use('/', homeRouter);
+// API Routes (not home route since index.html handles that)
 app.use('/api/irrigation', scheduleRouter);
-
-app.get('/api', (req, res) => {
-  res.status(200).json({
-    message: 'Bem-vindo à API da Água de Víbora',
-    version: '1.0.0',
-    description: 'API para gestão de calendários de rega',
-    endpoints: {
-      'GET /api/healthz': 'Verifica o estado da API',
-      'GET /api/irrigation/download-full-agenda': 'Descarrega calendário completo (xlsx, pdf)',
-      'GET /api/irrigation/download-template': 'Descarrega template sem horários (xlsx, pdf)',
-      'GET /api/irrigation/download-calendar': 'Descarrega calendário .ics para importar',
-    },
-    documentation: '/api-docs' 
-  })
-})
 
 app.get('/api/healthz', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
 })
-
 
 // Global error handler (must be after routes)
 app.use(errorHandler);
