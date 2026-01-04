@@ -16,19 +16,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+// Swagger API documentation (available in all environments)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
-
-// Middleware to restrict Swagger to localhost only
-const localhostOnly = (req: Request, res: Response, next: NextFunction) => {
-  const host = req.hostname;
-  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
-    return next();
-  }
-  res.status(403).json({ error: 'API documentation is only available on localhost' });
-};
-
-app.use('/api-docs', localhostOnly, swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
 app.use('/', homeRouter);
@@ -45,9 +37,7 @@ app.get('/api', (req, res) => {
       'GET /api/irrigation/download-template': 'Descarrega template sem horários (xlsx, pdf)',
       'GET /api/irrigation/download-calendar': 'Descarrega calendário .ics para importar',
     },
-    documentation: req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname === '::1' 
-      ? '/api-docs' 
-      : 'Disponível apenas em localhost'
+    documentation: '/api-docs' 
   })
 })
 
