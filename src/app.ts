@@ -4,7 +4,7 @@ import logger from 'morgan';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 
-import homeRouter from './routes/home.routes';
+import apiRouter from './routes/api.routes';
 import scheduleRouter from './routes/schedule.routes';
 import { errorHandler } from './middlewares/errorHandler';
 import { swaggerDocs } from './config/swagger';
@@ -26,9 +26,8 @@ app.use(
   swaggerUi.setup(swaggerDocs)
 );
 
-app.get('/api',homeRouter)
-
-// API Routes (not home route since index.html handles that)
+// API Routes
+app.use('/api', apiRouter);
 app.use('/api/irrigation', scheduleRouter);
 
 app.get('/api/healthz', (req, res) => {

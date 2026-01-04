@@ -195,39 +195,54 @@
             const year = document.getElementById('year').value || new Date().getFullYear();
             const url = `/api/irrigation/download-full-agenda?year=${year}&format=${format}`;
             
-            // Create a temporary link and trigger download
+            // Open in new tab and trigger download
             const link = document.createElement('a');
             link.href = url;
+            link.target = '_blank';
             link.download = `calendario-rega-${year}.${format}`;
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            
+            // Remove link after a short delay
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
         }
         
         function downloadTemplate(format) {
             const year = document.getElementById('year').value || new Date().getFullYear();
             const url = `/api/irrigation/download-template?year=${year}&format=${format}`;
             
-            // Create a temporary link and trigger download
+            // Open in new tab and trigger download
             const link = document.createElement('a');
             link.href = url;
+            link.target = '_blank';
             link.download = `template-rega-${year}.${format}`;
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            
+            // Remove link after a short delay
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
         }
         
         function downloadCalendar() {
             const year = document.getElementById('year').value || new Date().getFullYear();
             const url = `/api/irrigation/download-calendar?year=${year}`;
             
-            // Create a temporary link and trigger download
+            // Open in new tab and trigger download
             const link = document.createElement('a');
             link.href = url;
+            link.target = '_blank';
             link.download = `agua-vibora-${year}.ics`;
             document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
+            
+            // Remove link after a short delay
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
         }
         
         // Set current year as default
