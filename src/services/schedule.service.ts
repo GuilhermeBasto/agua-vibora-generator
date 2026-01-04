@@ -499,13 +499,12 @@ const generateScheduleCalendar = (
           hours: timeRange.durationHours, 
           minutes: timeRange.durationMinutes 
         },
-        title: `Irrigação - ${item.location}`,
+        title: `Água do casal: ${item.location}`,
         description: `Horário: ${item.schedule}`,
-        location: `${item.location}, Água de Víbora`,
         status: 'CONFIRMED' as const,
         busyStatus: 'BUSY' as const,
-        organizer: { name: 'Sistema de Irrigação Água de Víbora' },
-        categories: ['Irrigação', item.location],
+        organizer: { name: 'Água de Víbora' },
+        categories: ['Água de víbora', item.location],
       };
     });
 
