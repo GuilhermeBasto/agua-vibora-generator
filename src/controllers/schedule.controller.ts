@@ -110,7 +110,7 @@ const sendScheduleFile = async (
  * Downloads the full irrigation schedule with times in the specified format
  * Query parameters:
  *   - year: Year for the schedule (defaults to current year)
- *   - fileFormat: Format of the file (pdf, xlsx, csv) - defaults to pdf
+ *   - format: Format of the file (pdf, xlsx, csv) - defaults to xlsx
  */
 export const downloadFullAgenda = async (
   req: Request,
@@ -119,7 +119,7 @@ export const downloadFullAgenda = async (
 ): Promise<void> => {
   try {
     const year = parseYear(req.query.year);
-    const format = getFileFormat(req.query.fileFormat, 'pdf');
+    const format = getFileFormat(req.query.format, 'xlsx');
 
     await sendScheduleFile(res, year, format, 'agua-vibora', false);
   } catch (error) {
@@ -131,7 +131,7 @@ export const downloadFullAgenda = async (
  * Downloads a blank template without irrigation times
  * Query parameters:
  *   - year: Year for the template (defaults to current year)
- *   - fileFormat: Format of the file (pdf, xlsx, csv) - defaults to pdf
+ *   - format: Format of the file (pdf, xlsx, csv) - defaults to xlsx
  */
 export const downloadTemplate = async (
   req: Request,
@@ -140,7 +140,7 @@ export const downloadTemplate = async (
 ): Promise<void> => {
   try {
     const year = parseYear(req.query.year);
-    const format = getFileFormat(req.query.fileFormat, 'pdf');
+    const format = getFileFormat(req.query.format, 'xlsx');
 
     await sendScheduleFile(res, year, format, 'agua-vibora-casais', true);
   } catch (error) {

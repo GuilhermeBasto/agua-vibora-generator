@@ -1,14 +1,13 @@
-import createError from 'http-errors';
 import express, { Request, Response, NextFunction } from 'express';
-import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import swaggerUi from 'swagger-ui-express';
+import path from 'path';
 
 import homeRouter from './routes/home.routes';
 import scheduleRouter from './routes/schedule.routes';
 import { errorHandler } from './middlewares/errorHandler';
-import { swaggerSpec } from './config/swagger';
+import { swaggerDocs } from './config/swagger';
 
 const app = express();
 
@@ -17,33 +16,28 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// Serve static files for Swagger UI
-const publicPath = path.join(__dirname, '..', 'public');
-app.use('/public', express.static(publicPath));
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
-// Swagger documentation with custom CSS and static assets
-const swaggerOptions = {
-  customCssUrl: '/public/swagger-ui.css',
-  customSiteTitle: 'Água Víbora Generator - API Documentation',
-  customJs: [
-    '/public/swagger-ui-bundle.js',
-    '/public/swagger-ui-standalone-preset.js'
-  ]
+// Middleware to restrict Swagger to localhost only
+const localhostOnly = (req: Request, res: Response, next: NextFunction) => {
+  const host = req.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+    return next();
+  }
+  res.status(403).json({ error: 'API documentation is only available on localhost' });
 };
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
+
+app.use('/api-docs', localhostOnly, swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Routes
 app.use('/', homeRouter);
-app.use('/irrigation', scheduleRouter);
+app.use('/api/irrigation', scheduleRouter);
 
-app.get('/healthz', (req, res) => {
+app.get('/api/healthz', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// catch 404 and forward to error handler
-app.use(function (req: Request, res: Response, next: NextFunction) {
-  next(createError(404));
-});
 
 // Global error handler (must be after routes)
 app.use(errorHandler);
