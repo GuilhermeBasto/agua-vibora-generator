@@ -176,7 +176,7 @@ const generateScheduleData = (
   let currentDate = startDate;
   let dayIndex = 0;
 
-  while (isBefore(currentDate, addDays(endDate, 1))) {
+  while (currentDate <= endDate) {
     const locationName = yearSequence[dayIndex % yearSequence.length];
     let scheduleStr = '';
 
