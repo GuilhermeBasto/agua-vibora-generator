@@ -21,11 +21,8 @@ app.use(
   '/api-docs', 
   swaggerUi.serve, 
   swaggerUi.setup(swaggerDocs, {
-    customCssUrl: 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
-    customJs: [
-      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js',
-      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js'
-    ]
+    customSiteTitle: 'Água de Víbora API',
+    customCss: '.swagger-ui .topbar { display: none }'
   })
 );
 
