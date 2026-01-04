@@ -17,7 +17,17 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // Swagger API documentation (available in all environments)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.use(
+  '/api-docs', 
+  swaggerUi.serve, 
+  swaggerUi.setup(swaggerDocs, {
+    customCssUrl: 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
+    customJs: [
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js',
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js'
+    ]
+  })
+);
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
