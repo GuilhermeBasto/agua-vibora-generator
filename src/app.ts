@@ -34,6 +34,23 @@ app.use('/api-docs', localhostOnly, swaggerUi.serve, swaggerUi.setup(swaggerDocs
 app.use('/', homeRouter);
 app.use('/api/irrigation', scheduleRouter);
 
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    message: 'Bem-vindo à API da Água de Víbora',
+    version: '1.0.0',
+    description: 'API para gestão de calendários de rega',
+    endpoints: {
+      'GET /api/healthz': 'Verifica o estado da API',
+      'GET /api/irrigation/download-full-agenda': 'Descarrega calendário completo (xlsx, pdf)',
+      'GET /api/irrigation/download-template': 'Descarrega template sem horários (xlsx, pdf)',
+      'GET /api/irrigation/download-calendar': 'Descarrega calendário .ics para importar',
+    },
+    documentation: req.hostname === 'localhost' || req.hostname === '127.0.0.1' || req.hostname === '::1' 
+      ? '/api-docs' 
+      : 'Disponível apenas em localhost'
+  })
+})
+
 app.get('/api/healthz', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() })
 })
