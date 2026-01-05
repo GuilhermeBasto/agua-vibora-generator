@@ -1,22 +1,24 @@
-# Água Víbora Generator
+# Água Víbora Generator v2
 
-A Node.js/TypeScript API for generating irrigation schedules for the Água de Víbora irrigation system. This application generates schedules for multiple villages in the Torre and Santo-António regions, with support for exporting in various formats (PDF, Excel, CSV, and iCalendar).
+Uma aplicação web moderna para gerar e gerenciar cronogramas de irrigação para o sistema de irrigação de Água de Víbora. Esta versão é construída com React Router e oferece uma interface interativa para criar cronogramas personalizados para as múltiplas aldeias nas regiões de Torre e Santo-António.
 
-## Features
+## Recursos
 
-- **Automatic Schedule Generation**: Creates irrigation schedules based on yearly rotation patterns
-- **Multi-Village Support**: Manages schedules for 11 different villages across two regions
-- **Multiple Export Formats**: 
-  - PDF documents
-  - Excel spreadsheets (.xlsx)
-  - CSV files
-  - iCalendar (.ics) for Google Calendar integration
-- **Template Generation**: Create blank templates for manual scheduling
-- **Year-Based Rotation**: Automatically adjusts schedules based on odd/even years
+- **Interface Interativa**: Formulário intuitivo para criação de cronogramas personalizados
+- **Suporte Multi-Aldeia**: Gerencia cronogramas para 11 aldeias diferentes em duas regiões
+- **Múltiplos Formatos de Exportação**:
+  - PDF
+  - Excel (.xlsx)
+  - CSV
+  - iCalendar (.ics) para integração com Google Calendar
+- **Seletor de Ano**: Ajusta automaticamente os cronogramas com base em anos pares/ímpares
+- **Geração de Templates**: Cria templates em branco para agendamento manual
+- **Design Responsivo**: Interface otimizada para desktop e mobile
 
-## Villages Covered
+## Aldeias Cobertas
 
-### Torre Region
+### Região Torre
+
 - Torre
 - Crasto
 - Passo
@@ -24,166 +26,239 @@ A Node.js/TypeScript API for generating irrigation schedules for the Água de V�
 - Figueiredo
 - Redondinho
 
-### Santo-António Region
+### Região Santo-António
+
 - Casa Nova
 - Eirô
 - Cimo de Aldeia
 - Portela
 - Casa de Baixo
 
-## Project Structure
+## Estrutura do Projeto
 
 ```
-agua-vibora-generator/
-├── src/
-│   ├── app.ts                    # Express application setup
-│   ├── server.ts                 # HTTP server configuration
-│   ├── config/
-│   │   └── config.ts             # Environment configuration
-│   ├── controllers/
-│   │   └── schedule.controller.ts # Request handlers
-│   ├── middlewares/
-│   │   └── errorHandler.ts       # Global error handling
+agua-vibora-generator-v2/
+├── app/
+│   ├── components/
+│   │   ├── ConfigurationForm.tsx        # Formulário de configuração
+│   │   ├── DownloadSection.tsx          # Seção de download
+│   │   ├── ScheduleInputGroup.tsx       # Grupo de entrada de agendamento
+│   │   ├── WaterManagement.tsx          # Gerenciamento de água
+│   │   ├── YearSelector.tsx             # Seletor de ano
+│   │   ├── BackgroundGradient.tsx       # Componente de gradiente
+│   │   ├── Footer.tsx                   # Rodapé
+│   │   ├── Header.tsx                   # Cabeçalho
+│   │   ├── PageHeader.tsx               # Cabeçalho de página
+│   │   ├── InfoCard.tsx                 # Cartão de informação
+│   │   ├── Icon.tsx                     # Componente de ícone
+│   │   └── ui/                          # Componentes UI reutilizáveis
+│   ├── lib/
+│   │   ├── schedule.server.ts           # Lógica de geração de cronograma (servidor)
+│   │   ├── types.ts                     # Definições de tipo TypeScript
+│   │   ├── constants.ts                 # Constantes da aplicação
+│   │   └── utils.ts                     # Funções utilitárias
 │   ├── routes/
-│   │   └── schedule.routes.ts    # API routes
-│   └── services/
-│       └── schedule.service.ts   # Schedule generation logic
+│   │   ├── api.create-schedule.ts       # Endpoint para criar cronograma
+│   │   ├── api.$format.ts               # Endpoint para download de formatos
+│   │   ├── create-custom-schedule.tsx   # Página de criação de cronograma
+│   │   ├── schedule-display.tsx         # Página de exibição de cronograma
+│   │   └── home.tsx                     # Página inicial
+│   ├── entry.client.tsx                 # Entrada do cliente
+│   ├── entry.server.tsx                 # Entrada do servidor
+│   ├── root.tsx                         # Componente raiz
+│   ├── routes.ts                        # Configuração de rotas
+│   └── tailwind.css                     # Estilos globais
+├── public/                              # Arquivos estáticos
 ├── package.json
 ├── tsconfig.json
-└── nodemon.json
+├── tailwind.config.ts                   # Configuração do Tailwind CSS
+├── vite.config.ts                       # Configuração do Vite
+├── postcss.config.ts                    # Configuração do PostCSS
+├── react-router.config.ts               # Configuração do React Router
+└── README.md
 ```
 
-## Prerequisites
+## Pré-requisitos
 
-- Node.js (v14 or higher)
-- npm or yarn
+- Node.js (v18 ou superior)
+- npm ou yarn
 
-## Installation
+## Instalação
 
-1. Clone the repository:
+1. Clone o repositório:
+
 ```bash
 git clone <repository-url>
-cd agua-vibora-generator
+cd agua-vibora-generator-v2
 ```
 
-2. Install dependencies:
+2. Instale as dependências:
+
 ```bash
 npm install
 ```
 
-3. Create a `.env` file in the root directory:
-```env
-PORT=3000
-NODE_ENV=development
-```
+## Uso
 
-## Usage
+### Modo Desenvolvimento
 
-### Development Mode
-
-Run the application in development mode with auto-reload:
+Execute a aplicação em modo desenvolvimento com recarregamento automático:
 
 ```bash
 npm run dev
 ```
 
-### Production Mode
+A aplicação estará disponível em `http://localhost:5173` (ou outra porta se essa estiver em uso).
 
-1. Build the TypeScript code:
+### Modo Produção
+
+1. Construa a aplicação:
+
 ```bash
 npm run build
 ```
 
-2. Start the production server:
+2. Inicie o servidor de produção:
+
 ```bash
-npm start
+npm run start
 ```
 
-## API Endpoints
+## Endpoints da API
 
-### Download Full Agenda
+### Criar Cronograma
 
-Downloads the complete irrigation schedule with times.
+Endpoint para criar um novo cronograma personalizado.
 
-```http
-GET /irrigation/download-full-agenda?year=2025&format=xlsx
+```
+POST /api/create-schedule
 ```
 
-**Query Parameters:**
-- `year` (optional): The year for the schedule (defaults to current year)
-- `format` (optional): File format - `xlsx`, `csv`, or `pdf` (defaults to `xlsx`)
+**Corpo da Requisição:**
 
-### Download Template
-
-Downloads a blank schedule template without irrigation times.
-
-```http
-GET /irrigation/download-template?year=2025&format=xlsx
+```json
+{
+  "name": "Cronograma 2025",
+  "year": "2025",
+  "schedules": {
+    "Torre": ["1h30 da tarde", "12h até as 2h da tarde"],
+    "Passo": ["10 da noite até ás 1h30/5h30 da tarde"]
+  }
+}
 ```
 
-**Query Parameters:**
-- `year` (optional): The year for the template (defaults to current year)
-- `format` (optional): File format - `xlsx`, `csv`, or `pdf` (defaults to `xlsx`)
+**Resposta:**
 
-### Download Calendar
-
-Downloads the schedule as an iCalendar file for import into Google Calendar or other calendar applications.
-
-```http
-GET /irrigation/download-calendar?year=2025
+```json
+{
+  "data": [
+    /* dados do cronograma gerado */
+  ],
+  "name": "Cronograma 2025",
+  "year": "2025"
+}
 ```
 
-**Query Parameters:**
-- `year` (optional): The year for the calendar (defaults to current year)
+### Download de Cronograma
 
-## Schedule Logic
+Baixa o cronograma em diferentes formatos.
 
-The irrigation schedule follows these rules:
+```
+GET /api/:format?year=2025
+```
 
-- **Season**: Runs from June 25 to September 29 each year
-- **Rotation**: Villages follow a specific rotation pattern that shifts annually
-- **Timing Variations**: Different schedules apply to Torre, Passo, and Figueiredo based on odd/even years
-- **Reference Year**: 2025 is used as the base year for calculating rotations
+**Parâmetros:**
 
-## Development
+- `:format` (obrigatório): Formato do arquivo - `xlsx`, `pdf`, ou `ics`
+- `year` (opcional): Ano do cronograma (padrão: ano atual)
+- `template` (opcional): Define como `true` para baixar template sem horários
+
+**Exemplos:**
+
+- `/api/xlsx?year=2025` - Cronograma completo em Excel
+- `/api/pdf?year=2025&template=true` - Template PDF vazio
+- `/api/ics?year=2025` - Arquivo iCalendar para Google Calendar
+
+## Lógica de Agendamento
+
+O cronograma de irrigação segue estas regras:
+
+- **Temporada**: Funciona de 25 de junho a 29 de setembro cada ano
+- **Rotação**: As aldeias seguem um padrão específico de rotação que muda anualmente
+- **Variações de Horário**: Diferentes cronogramas se aplicam a Torre, Passo e Figueiredo com base em anos pares/ímpares
+- **Ano de Referência**: 2025 é usado como o ano base para calcular rotações
+
+## Desenvolvimento
 
 ### Scripts
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Compile TypeScript to JavaScript
-- `npm start` - Run production server
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
+- `npm run dev` - Inicia servidor de desenvolvimento
+- `npm run build` - Compila TypeScript e prepara para produção
+- `npm run start` - Executa servidor de produção
+- `npm run typecheck` - Valida tipos TypeScript
 
-### Tech Stack
+### Stack de Tecnologia
 
-- **Runtime**: Node.js with TypeScript
-- **Framework**: Express.js
-- **PDF Generation**: PDFKit
-- **Excel Generation**: ExcelJS
-- **Calendar Generation**: ics
-- **Date Handling**: date-fns
+- **Runtime**: Node.js
+- **Framework Frontend**: React com React Router v7
+- **Linguagem**: TypeScript
+- **Styling**: Tailwind CSS com animações
+- **Build Tool**: Vite
+- **Componentes UI**: Componentes customizados com padrões shadcn/ui
+- **Exportação de Dados**:
+  - PDFKit para geração de PDF
+  - ExcelJS para geração de Excel
+  - ICS para iCalendar
 
-## Configuration
+## Deployment
 
-The application can be configured via environment variables:
+### Docker Deployment
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | 3000 |
-| `NODE_ENV` | Environment mode | development |
+Para construir e executar com Docker:
 
-## Error Handling
+```bash
+docker build -t agua-vibora-generator-v2 .
 
-The application includes comprehensive error handling:
-- Global error handler middleware
-- 404 handling for undefined routes
-- Typed error responses
+# Executar o container
+docker run -p 3000:3000 agua-vibora-generator-v2
+```
 
-## License
+A aplicação containerizada pode ser implantada em qualquer plataforma que suporte Docker:
 
-Private project - All rights reserved
+- AWS ECS
+- Google Cloud Run
+- Azure Container Apps
+- Digital Ocean App Platform
+- Fly.io
+- Railway
 
-## Contributing
+### Implantação DIY
 
-This is a private project. For contributions, please contact the project maintainer.
+Se está familiarizado com a implantação de aplicações Node, o servidor integrado está pronto para produção.
+
+Certifique-se de implementar a saída de `npm run build`:
+
+```
+├── package.json
+├── package-lock.json
+├── build/
+│   ├── client/    # Ativos estáticos
+│   └── server/    # Código do servidor
+```
+
+## Tratamento de Erros
+
+A aplicação inclui tratamento abrangente de erros:
+
+- Validação de entrada nos endpoints da API
+- Mensagens de erro estruturadas
+- Tratamento de erros de JSON parsing
+- Validação de campos obrigatórios
+
+## Licença
+
+Projeto privado - Todos os direitos reservados
+
+## Contribuindo
+
+Este é um projeto privado. Para contribuições, entre em contato com o mantedor do projeto.

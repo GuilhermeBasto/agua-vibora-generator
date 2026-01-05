@@ -1,13 +1,15 @@
 /**
- * @fileoverview Service for generating Água de Víbora irrigation schedules
+ * @fileoverview Server-only utility for generating Água de Víbora irrigation schedules
+ * This file uses the .server.ts convention to ensure it's never bundled to the client
  * Handles schedule generation for different villages and creates Excel/PDF outputs
  */
 
-import ExcelJS from 'exceljs';
-import PDFDocument from 'pdfkit';
-import { format, set, addDays, isBefore } from 'date-fns';
-import { pt } from 'date-fns/locale';
-import { createEvents, EventAttributes } from 'ics';
+import ExcelJS from "exceljs";
+import PDFDocument from "pdfkit";
+import { format, set, addDays } from "date-fns";
+import { pt } from "date-fns/locale";
+import { createEvents, type EventAttributes } from "ics";
+import type { ScheduleEntry } from "./types";
 
 /** Reference year for schedule rotation calculations */
 const REFERENCE_YEAR = 2025;
@@ -25,40 +27,40 @@ const DATE_FORMAT = "dd 'de' MMMM";
  * Villages grouped by region (Torre and Santo-Antonio)
  */
 const VILLAGES: Record<string, string[]> = {
-  Torre: ['Torre', 'Crasto', 'Passo', 'Ramada', 'Figueiredo', 'Redondinho'],
-  'Santo-Antonio': [
-    'Casa Nova',
-    'Eirô',
-    'Cimo de Aldeia',
-    'Portela',
-    'Casa de Baixo',
+  Torre: ["Torre", "Crasto", "Passo", "Ramada", "Figueiredo", "Redondinho"],
+  "Santo-Antonio": [
+    "Casa Nova",
+    "Eirô",
+    "Cimo de Aldeia",
+    "Portela",
+    "Casa de Baixo",
   ],
 };
 
 /**
  * Time schedules for specific villages in odd and even years
  */
-type YearScheduleConfig =Record<string, string[]>
+type YearScheduleConfig = Record<string, string[]>;
 
 const YEAR_SCHEDULE: { odd: YearScheduleConfig; even: YearScheduleConfig } = {
   odd: {
-    Torre: ['1h30 da tarde', '12h até as 2h da tarde'],
+    Torre: ["1h30 da tarde", "12h até as 2h da tarde"],
     Passo: [
-      '10 da noite até ás 1h30/5h30 da tarde',
-      '9h30 até 10h30/13h30 até 17h',
+      "10 da noite até ás 1h30/5h30 da tarde",
+      "9h30 até 10h30/13h30 até 17h",
     ],
     Figueiredo: [
-      'Ao pôr do sol até à meia noite',
-      '3h da tarde até ao pôr do sol',
+      "Ao pôr do sol até à meia noite",
+      "3h da tarde até ao pôr do sol",
     ],
   },
   even: {
-    Torre: ['12h', '13h30'],
+    Torre: ["12h", "13h30"],
     Passo: [
-      '9h30 até 10h30 da Noite/13h30 até 17h',
-      '10 da noite até á 1h30/5h30 da tarde',
+      "9h30 até 10h30 da Noite/13h30 até 17h",
+      "10 da noite até á 1h30/5h30 da tarde",
     ],
-    Figueiredo: ['Nascer do sol às 12h', '3h até ao Nascer do sol'],
+    Figueiredo: ["Nascer do sol às 12h", "3h até ao Nascer do sol"],
   },
 };
 
@@ -71,19 +73,8 @@ type ScheduledVillage = keyof YearScheduleConfig;
  * Type guard to check if a village has a specific schedule
  */
 const isScheduledVillage = (village: string): village is ScheduledVillage => {
-  return village === 'Torre' || village === 'Passo' || village === 'Figueiredo';
+  return village === "Torre" || village === "Passo" || village === "Figueiredo";
 };
-
-/**
- * Schedule entry data structure
- */
-export interface ScheduleEntry {
-  date: Date;
-  dateFormatted: string;
-  location: string;
-  schedule: string;
-  isBold: boolean;
-}
 
 /**
  * Rotates a list based on the year offset from a reference year
@@ -102,9 +93,7 @@ const getOrder = <T>(list: T[], year: number, referenceYear: number): T[] => {
  * @param year - The target year
  * @returns Schedule durations for odd or even year
  */
-const getYearScheduleDurations = (
-  year: number,
-): Partial<YearScheduleConfig> => {
+const getYearScheduleDurations = (year: number): YearScheduleConfig => {
   return year % 2 === 0 ? YEAR_SCHEDULE.even : YEAR_SCHEDULE.odd;
 };
 
@@ -116,9 +105,9 @@ const getYearScheduleDurations = (
 const getYearSchedule = (year: number): string[] => {
   const torrePlaces = getOrder(VILLAGES.Torre, year, REFERENCE_YEAR);
   const santoAntonioPlaces = getOrder(
-    VILLAGES['Santo-Antonio'],
+    VILLAGES["Santo-Antonio"],
     year,
-    REFERENCE_YEAR,
+    REFERENCE_YEAR
   );
   return year % 2 === 0
     ? [...santoAntonioPlaces, ...torrePlaces]
@@ -152,6 +141,18 @@ const getDateRange = (year: number): { startDate: Date; endDate: Date } => {
   return { startDate, endDate };
 };
 
+const generateSchedulePointers = (
+  config: YearScheduleConfig
+): Record<string, number> => {
+  return Object.keys(config).reduce(
+    (acc, location) => {
+      acc[location] = 0;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+};
+
 /**
  * Generates the complete schedule data for the year
  * @param year - The target year
@@ -160,15 +161,12 @@ const getDateRange = (year: number): { startDate: Date; endDate: Date } => {
  */
 const generateScheduleData = (
   year: number,
-  template: boolean = false,
+  template: boolean = false
 ): ScheduleEntry[] => {
   const yearSequence = getYearSchedule(year);
   const schedulesByLocation = template ? {} : getYearScheduleDurations(year);
-  const schedulePointers: Record<string, number> = {
-    Torre: 0,
-    Passo: 0,
-    Figueiredo: 0,
-  };
+  const schedulePointers: Record<string, number> =
+    generateSchedulePointers(schedulesByLocation);
 
   const { startDate, endDate } = getDateRange(year);
   const scheduleData: ScheduleEntry[] = [];
@@ -178,7 +176,7 @@ const generateScheduleData = (
 
   while (currentDate <= endDate) {
     const locationName = yearSequence[dayIndex % yearSequence.length];
-    let scheduleStr = '';
+    let scheduleStr = "";
 
     if (isScheduledVillage(locationName) && schedulesByLocation[locationName]) {
       const list = schedulesByLocation[locationName];
@@ -205,15 +203,60 @@ const generateScheduleData = (
 };
 
 /**
+ * Generates the complete schedule data for the year
+ * @param year - The target year
+ * @param template - If true, generates a template without time schedules
+ * @returns Array of schedule entries
+ */
+const generateCustomScheduleData = (
+  year: number,
+  schedulesByLocation: Record<string, string[]>
+): ScheduleEntry[] => {
+  const yearSequence = getYearSchedule(year);
+  const schedulePointers: Record<string, number> =
+    generateSchedulePointers(schedulesByLocation);
+  const { startDate, endDate } = getDateRange(year);
+  const scheduleData: ScheduleEntry[] = [];
+
+  let currentDate = startDate;
+  let dayIndex = 0;
+
+  while (currentDate <= endDate) {
+    const locationName = yearSequence[dayIndex % yearSequence.length];
+    let scheduleStr = "";
+
+    // Check if location has custom schedules (remove isScheduledVillage restriction)
+    if (schedulesByLocation[locationName]) {
+      const list = schedulesByLocation[locationName];
+      scheduleStr = list[schedulePointers[locationName] % list.length];
+      schedulePointers[locationName]++;
+    }
+
+    scheduleData.push({
+      date: currentDate,
+      dateFormatted: format(currentDate, DATE_FORMAT, { locale: pt }),
+      location: locationName,
+      schedule: scheduleStr,
+      isBold: !!schedulesByLocation[locationName],
+    });
+
+    currentDate = addDays(currentDate, 1);
+    dayIndex++;
+  }
+
+  return scheduleData;
+};
+
+/**
  * Adds black borders to an Excel cell
  * @param cell - ExcelJS cell object
  */
 const addBordersToCell = (cell: ExcelJS.Cell): void => {
   cell.border = {
-    top: { style: 'thin', color: { argb: 'FF000000' } },
-    left: { style: 'thin', color: { argb: 'FF000000' } },
-    bottom: { style: 'thin', color: { argb: 'FF000000' } },
-    right: { style: 'thin', color: { argb: 'FF000000' } },
+    top: { style: "thin", color: { argb: "FF000000" } },
+    left: { style: "thin", color: { argb: "FF000000" } },
+    bottom: { style: "thin", color: { argb: "FF000000" } },
+    right: { style: "thin", color: { argb: "FF000000" } },
   };
 };
 
@@ -224,13 +267,13 @@ const addBordersToCell = (cell: ExcelJS.Cell): void => {
  */
 const addTitleToWorksheet = (
   worksheet: ExcelJS.Worksheet,
-  year: number,
+  year: number
 ): void => {
-  worksheet.insertRow(1, ['Aviança da Água de Víbora - Ano ' + year]);
-  worksheet.mergeCells('A1:C1');
-  const titleCell = worksheet.getCell('A1');
-  titleCell.font = { name: 'Arial', size: 14, bold: true };
-  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  worksheet.insertRow(1, ["Aviança da Água de Víbora - Ano " + year]);
+  worksheet.mergeCells("A1:C1");
+  const titleCell = worksheet.getCell("A1");
+  titleCell.font = { name: "Arial", size: 14, bold: true };
+  titleCell.alignment = { vertical: "middle", horizontal: "center" };
   worksheet.addRow([]); // Empty separator row
 };
 
@@ -242,18 +285,18 @@ const addTitleToWorksheet = (
  */
 const generateScheduleWorkbook = (
   year: number,
-  template: boolean = false,
+  template: boolean = false
 ): ExcelJS.Workbook => {
   const scheduleData = generateScheduleData(year, template);
 
   // Excel configuration
   const workbook = new ExcelJS.Workbook();
-  const worksheet = workbook.addWorksheet('Agua de Vibora');
+  const worksheet = workbook.addWorksheet("Agua de Vibora");
 
   worksheet.columns = [
-    { key: 'date', width: 15 },
-    { key: 'location', width: 20 },
-    { key: 'schedule', width: 40 },
+    { key: "date", width: 15 },
+    { key: "location", width: 20 },
+    { key: "schedule", width: 40 },
   ];
 
   // Add title
@@ -268,13 +311,13 @@ const generateScheduleWorkbook = (
     });
 
     // Add black borders to all cells
-    row.eachCell((cell) => addBordersToCell(cell));
+    row.eachCell((cell: ExcelJS.Cell) => addBordersToCell(cell));
 
     // Make bold if needed
     if (item.isBold) {
-      row.getCell('date').font = { bold: true };
-      row.getCell('location').font = { bold: true };
-      row.getCell('schedule').font = { bold: true };
+      row.getCell("date").font = { bold: true };
+      row.getCell("location").font = { bold: true };
+      row.getCell("schedule").font = { bold: true };
     }
   });
 
@@ -287,21 +330,18 @@ const generateScheduleWorkbook = (
  * @param template - If true, generates a template without time schedules
  * @returns PDFKit Document object
  */
-const generateSchedulePDF = (
-  year: number,
-  template: boolean = false,
-): PDFKit.PDFDocument => {
+const generateSchedulePDF = (year: number, template: boolean = false) => {
   const scheduleData = generateScheduleData(year, template);
 
   // PDF configuration
-  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const doc = new PDFDocument({ margin: 50, size: "A4" });
 
   // Title
   doc
     .fontSize(16)
-    .font('Helvetica-Bold')
+    .font("Helvetica-Bold")
     .text(`Aviança da Água de Víbora - Ano ${year}`, {
-      align: 'center',
+      align: "center",
     });
   doc.moveDown(2);
 
@@ -328,13 +368,13 @@ const generateSchedulePDF = (
     }
 
     // Set font based on bold flag
-    doc.font(item.isBold ? 'Helvetica-Bold' : 'Helvetica').fontSize(10);
+    doc.font(item.isBold ? "Helvetica-Bold" : "Helvetica").fontSize(10);
 
     // Date column
     doc.rect(startX, currentY, colWidths.date, rowHeight).stroke();
     doc.text(item.dateFormatted, startX + 5, currentY + 5, {
       width: colWidths.date - 10,
-      align: 'left',
+      align: "left",
     });
 
     // Location column
@@ -343,7 +383,7 @@ const generateSchedulePDF = (
       .stroke();
     doc.text(item.location, startX + colWidths.date + 5, currentY + 5, {
       width: colWidths.location - 10,
-      align: 'left',
+      align: "left",
     });
 
     // Schedule column
@@ -352,7 +392,7 @@ const generateSchedulePDF = (
         startX + colWidths.date + colWidths.location,
         currentY,
         colWidths.schedule,
-        rowHeight,
+        rowHeight
       )
       .stroke();
     doc.text(
@@ -361,8 +401,8 @@ const generateSchedulePDF = (
       currentY + 5,
       {
         width: colWidths.schedule - 10,
-        align: 'left',
-      },
+        align: "left",
+      }
     );
 
     currentY += rowHeight;
@@ -381,17 +421,19 @@ const generateSchedulePDF = (
  * @param timeStr - Time string in Portuguese
  * @returns Object with hour and minute
  */
-const parsePortugueseTime = (timeStr: string): { hour: number; minute: number } => {
+const parsePortugueseTime = (
+  timeStr: string
+): { hour: number; minute: number } => {
   const str = timeStr.toLowerCase().trim();
 
   // Special cases
-  if (str.includes('nascer')) {
+  if (str.includes("nascer")) {
     return { hour: 6, minute: 0 }; // Sunrise
   }
-  if (str.includes('pôr do sol')) {
+  if (str.includes("pôr do sol")) {
     return { hour: 18, minute: 30 }; // Sunset
   }
-  if (str.includes('meia noite') || str.includes('meia-noite')) {
+  if (str.includes("meia noite") || str.includes("meia-noite")) {
     return { hour: 0, minute: 0 }; // Midnight
   }
 
@@ -407,9 +449,9 @@ const parsePortugueseTime = (timeStr: string): { hour: number; minute: number } 
   const minute = match[2] ? parseInt(match[2], 10) : 0;
 
   // Adjust for afternoon/night context
-  if (str.includes('tarde') && hour < 12) {
+  if (str.includes("tarde") && hour < 12) {
     hour += 12; // "1h30 da tarde" -> 13:30
-  } else if (str.includes('noite') && hour < 12) {
+  } else if (str.includes("noite") && hour < 12) {
     hour += 12; // "10 da noite" -> 22:00
   }
 
@@ -425,7 +467,9 @@ const parsePortugueseTime = (timeStr: string): { hour: number; minute: number } 
  * @param timeStr - Time string in Portuguese
  * @returns Object with start time, optional end time, and duration
  */
-const parseTimeRange = (timeStr: string): {
+const parseTimeRange = (
+  timeStr: string
+): {
   start: { hour: number; minute: number };
   end?: { hour: number; minute: number };
   durationHours: number;
@@ -434,17 +478,20 @@ const parseTimeRange = (timeStr: string): {
   const str = timeStr.toLowerCase();
 
   // Check if it's a time range with "até"
-  if (str.includes('até')) {
+  if (str.includes("até")) {
     // Split by "até" and handle variations like "às", "as", "á", "ás"
     const parts = str.split(/até\s+(?:à?s?\s+)?/);
-    
+
     if (parts.length >= 2) {
       const startTime = parsePortugueseTime(parts[0]);
       const endTime = parsePortugueseTime(parts[1]);
 
       // Calculate duration (handle overnight scenarios)
-      let totalMinutes = (endTime.hour * 60 + endTime.minute) - (startTime.hour * 60 + startTime.minute);
-      
+      let totalMinutes =
+        endTime.hour * 60 +
+        endTime.minute -
+        (startTime.hour * 60 + startTime.minute);
+
       // If negative, it means the end time is the next day
       if (totalMinutes < 0) {
         totalMinutes += 24 * 60; // Add 24 hours
@@ -477,7 +524,7 @@ const parseTimeRange = (timeStr: string): {
  * @returns ICS file content as string or error
  */
 const generateScheduleCalendar = (
-  year: number,
+  year: number
 ): { error: Error } | { value: string } => {
   const scheduleData = generateScheduleData(year, false);
 
@@ -495,16 +542,16 @@ const generateScheduleCalendar = (
           timeRange.start.hour,
           timeRange.start.minute,
         ],
-        duration: { 
-          hours: timeRange.durationHours, 
-          minutes: timeRange.durationMinutes 
+        duration: {
+          hours: timeRange.durationHours,
+          minutes: timeRange.durationMinutes,
         },
         title: `Água do casal: ${item.location}`,
         description: `Horário: ${item.schedule}`,
-        status: 'CONFIRMED' as const,
-        busyStatus: 'BUSY' as const,
-        organizer: { name: 'Água de Víbora' },
-        categories: ['Água de víbora', item.location],
+        status: "CONFIRMED" as const,
+        busyStatus: "BUSY" as const,
+        organizer: { name: "Água de Víbora" },
+        categories: ["Água de víbora", item.location],
       };
     });
 
@@ -515,15 +562,17 @@ const generateScheduleCalendar = (
   }
 
   if (!result.value) {
-    return { error: new Error('Failed to generate calendar') };
+    return { error: new Error("Failed to generate calendar") };
   }
 
   return { value: result.value };
 };
 
-export { 
-  getYearSchedule, 
-  generateScheduleWorkbook, 
+export {
+  getYearSchedule,
+  generateScheduleData,
+  generateCustomScheduleData,
+  generateScheduleWorkbook,
   generateSchedulePDF,
-  generateScheduleCalendar 
+  generateScheduleCalendar,
 };
