@@ -15,7 +15,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 
   // Validate year
-  if (isNaN(year) || year < 2020 || year > 2050) {
+  if (isNaN(year)) {
     throw new Response("Invalid year", { status: 400 });
   }
 
