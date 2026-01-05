@@ -20,7 +20,7 @@ export function WaterManagement() {
   };
 
   return (
-    <div className="relative w-full max-w-2xl">
+    <div className="relative w-full max-w-6xl">
       <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden backdrop-blur-sm">
         <Header />
 
