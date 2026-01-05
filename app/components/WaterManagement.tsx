@@ -96,6 +96,7 @@ export function WaterManagement() {
             <Link
               to={`/api/ics?year=${year}`}
               reloadDocument
+              download
               className="w-full group relative bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg hover:shadow-violet-500/50 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-slate-900 inline-flex flex-col items-center justify-center"
             >
               <div className="flex items-center space-x-2">

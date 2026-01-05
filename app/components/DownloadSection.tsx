@@ -38,6 +38,7 @@ export function DownloadSection({ title, buttons }: DownloadSectionProps) {
             key={index}
             to={button.href}
             reloadDocument
+            download
             className={getButtonClasses(button.variant)}
           >
             <div className="flex items-center justify-center space-x-2">
