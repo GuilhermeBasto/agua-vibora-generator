@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Icon } from "./Icon";
+import { AVAILABLE_VILLAGES } from "~/lib/constants";
 import {
   Select,
   SelectContent,
@@ -6,171 +8,188 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import { AVAILABLE_VILLAGES } from "~/lib/constants";
 
 interface ScheduleInputGroupProps {
   title: string;
-  color: "emerald" | "purple";
+  color: "emerald";
   year: number;
   schedules: Record<string, string[]>;
-  onChange: (schedules: Record<string, string[]>) => void;
+  onChange: (newSchedules: Record<string, string[]>) => void;
 }
 
 export function ScheduleInputGroup({
   title,
-  color,
-  year,
   schedules,
   onChange,
 }: ScheduleInputGroupProps) {
-  const colorClasses = {
-    emerald: "text-emerald-400",
-    purple: "text-purple-400",
+  const [villageToAdd, setVillageToAdd] = useState("");
+  const [selectedVillage, setSelectedVillage] = useState("");
+
+  const addedVillages = Object.keys(schedules);
+
+  const handleAddVillage = () => {
+    if (villageToAdd && !schedules[villageToAdd]) {
+      onChange({ ...schedules, [villageToAdd]: [] });
+      setSelectedVillage(villageToAdd);
+      setVillageToAdd("");
+    }
   };
 
-  const allVillages = new Set(Object.keys(schedules));
-
-  const [entries, setEntries] = useState<
-    { location: string; times: string[] }[]
-  >(
-    allVillages.size > 0
-      ? Array.from(allVillages).map((village) => ({
-          location: village,
-          times: schedules[village] || [""],
-        }))
-      : [{ location: "", times: [""] }]
-  );
-
-  function updateEntry(index: number, village: string, times: string[]) {
-    const newEntries = [...entries];
-    newEntries[index] = { location: village, times };
-
-    setEntries(newEntries);
-
-    const newSchedules: Record<string, string[]> = {};
-
-    newEntries.forEach(({ location, times }) => {
-      const trimmedVillage = location.trim();
-      const validTimes = times.filter((time) => time.trim());
-
-      if (trimmedVillage && validTimes.length > 0) {
-        newSchedules[trimmedVillage] = validTimes;
-      }
-    });
-
-    onChange(newSchedules);
-  }
-
-  function addEntry() {
-    setEntries([...entries, { location: "", times: [""] }]);
-  }
-
-  function removeEntry(index: number) {
-    if (entries.length > 1) {
-      const newEntries = entries.filter((_, i) => i !== index);
-      setEntries(newEntries);
-
-      const newSchedules: Record<string, string[]> = {};
-
-      newEntries.forEach(({ location, times }) => {
-        const trimmedVillage = location.trim();
-        const validTimes = times.filter((time) => time.trim());
-
-        if (trimmedVillage && validTimes.length > 0) {
-          newSchedules[trimmedVillage] = validTimes;
-        }
-      });
-
-      onChange(newSchedules);
+  const handleRemoveVillage = (villageName: string) => {
+    const { [villageName]: _, ...rest } = schedules;
+    onChange(rest);
+    if (selectedVillage === villageName) {
+      setSelectedVillage("");
     }
-  }
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!selectedVillage) return;
+    const lines = e.target.value.split("\n");
+    onChange({ ...schedules, [selectedVillage]: lines });
+  };
 
   return (
-    <div className="mb-6">
-      <h3 className={`text-xl font-semibold mb-2 ${colorClasses[color]}`}>
+    <div className="space-y-6 border border-slate-800 bg-slate-950/20 p-5 rounded-3xl">
+      <h3 className="text-emerald-400 font-bold uppercase tracking-widest text-[10px] ml-1">
         {title}
       </h3>
-      <div className="space-y-4">
-        {entries.map((entry, index) => (
-          <ScheduleEntry
-            key={index}
-            village={entry.location}
-            times={entry.times}
-            onUpdate={(village, times) => updateEntry(index, village, times)}
-            onRemove={() => removeEntry(index)}
-          />
-        ))}
-      </div>
-      <button
-        type="button"
-        onClick={addEntry}
-        className="mt-2 px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded text-sm text-white"
-      >
-        + Adicionar Aldeia
-      </button>
-    </div>
-  );
-}
 
-interface ScheduleEntryProps {
-  village: string;
-  times: string[];
-  onUpdate: (village: string, times: string[]) => void;
-  onRemove: () => void;
-}
+      {/* Adicionar Aldeia */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1">
+          <Select value={villageToAdd} onValueChange={setVillageToAdd}>
+            <SelectTrigger className="w-full h-[58px] bg-slate-900 border-slate-700 rounded-2xl px-5 text-white focus:ring-2 focus:ring-emerald-500/50 outline-none">
+              <SelectValue placeholder="Escolher aldeia para adicionar..." />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-700 text-white rounded-xl">
+              {AVAILABLE_VILLAGES.filter((v) => !addedVillages.includes(v)).map(
+                (v) => (
+                  <SelectItem
+                    key={v}
+                    value={v}
+                    className="focus:bg-emerald-500/20 focus:text-emerald-400 cursor-pointer"
+                  >
+                    {v}
+                  </SelectItem>
+                )
+              )}
+            </SelectContent>
+          </Select>
+        </div>
 
-function ScheduleEntry({
-  village,
-  times,
-  onUpdate,
-  onRemove,
-}: ScheduleEntryProps) {
-  const timesText = times.join("\n");
-
-  return (
-    <div className="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-      <div className="flex gap-2 mb-4">
-        <Select
-          value={village || ""}
-          onValueChange={(value) => onUpdate(value, times)}
-        >
-          <SelectTrigger className="flex-1 bg-slate-800 border-slate-600 text-slate-100">
-            <SelectValue placeholder="Selecionar aldeia" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-800 border-slate-600">
-            {AVAILABLE_VILLAGES.map((v) => (
-              <SelectItem key={v} value={v} className="text-slate-100">
-                {v}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <button
           type="button"
-          onClick={onRemove}
-          className="px-3 py-2 bg-red-600 hover:bg-red-500 rounded text-sm"
+          disabled={!villageToAdd}
+          onClick={handleAddVillage}
+          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 text-white px-8 py-4 rounded-2xl font-bold text-sm transition-all active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20"
         >
-          ✕
+          <Icon name="plus" className="w-4 h-4" />
+          <span>Adicionar</span>
         </button>
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-white mb-2">
-          Horários
-        </label>
-        <textarea
-          placeholder={"1h30 da tarde\n12h até as 2h da tarde"}
-          rows={3}
-          value={timesText}
-          onChange={(e) => onUpdate(village, e.target.value.split("\n"))}
-          className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-100 font-mono text-sm"
-        ></textarea>
-        <p className="text-xs text-slate-400 mt-2">
-          💡 <strong>Dica:</strong> Para adicionar vários horários, coloque cada
-          um numa nova linha. Certifique-se que os horários estão pela ordem
-          correcta — o primeiro horário no campo será o horário que aparecerá na
-          aviança.
-        </p>
+      {/* INDICADOR DE ALDEIAS JÁ SELECIONADAS */}
+      {addedVillages.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-2 animate-in fade-in duration-500">
+          {addedVillages.map((v) => (
+            <button
+              key={`badge-${v}`}
+              type="button"
+              onClick={() => setSelectedVillage(v)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                selectedVillage === v
+                  ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-400 ring-2 ring-cyan-500/20"
+                  : "bg-slate-800/40 border-slate-700 text-slate-400 hover:border-slate-500"
+              }`}
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${schedules[v].length > 0 ? "bg-emerald-400" : "bg-slate-600"}`}
+              />
+              {v}
+              {selectedVillage === v && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveVillage(v);
+                  }}
+                >
+                  <Icon name="x" className="w-3 h-3 hover:text-red-400" />
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="h-px bg-slate-800/50 w-full my-6"></div>
+
+      {/* Editar Horários */}
+      <div className="space-y-4">
+        <div className="flex gap-3">
+          <div className="flex-1">
+            <Select value={selectedVillage} onValueChange={setSelectedVillage}>
+              <SelectTrigger className="w-full h-[58px] bg-slate-900 border-slate-700 rounded-2xl px-5 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
+                <SelectValue placeholder="Configurar horários de..." />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700 text-white rounded-xl">
+                {addedVillages.map((v) => (
+                  <SelectItem
+                    key={v}
+                    value={v}
+                    className="focus:bg-cyan-500/20 focus:text-cyan-400 cursor-pointer"
+                  >
+                    {v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {selectedVillage && (
+            <button
+              type="button"
+              onClick={() => handleRemoveVillage(selectedVillage)}
+              className="p-4 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 rounded-2xl transition-all active:scale-90"
+              title="Remover aldeia"
+            >
+              <Icon name="x" className="w-6 h-6" />
+            </button>
+          )}
+        </div>
+
+        {selectedVillage ? (
+          <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+              Definir Momentos: {selectedVillage}
+            </label>
+
+            <textarea
+              value={schedules[selectedVillage]?.join("\n") || ""}
+              onChange={handleTextChange}
+              rows={5}
+              className="w-full bg-slate-950/60 border border-slate-700 rounded-3xl px-6 py-5 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-500/50 outline-none placeholder-slate-800 transition-all shadow-2xl"
+              placeholder="Ex:&#10;1h30 da tarde&#10;Noite (22h às 06h)"
+            />
+
+            <div className="flex items-start gap-3 p-4 bg-cyan-500/5 rounded-2xl border border-cyan-500/10">
+              <Icon
+                name="info"
+                className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5"
+              />
+              <p className="text-[11px] text-slate-400 leading-normal">
+                Escreva cada horário numa linha nova. A primeira linha será o
+                destaque visual no calendário final.
+              </p>
+            </div>
+          </div>
+        ) : addedVillages.length > 0 ? (
+          <div className="py-12 text-center border-2 border-dashed border-slate-800/50 rounded-3xl bg-slate-900/10">
+            <p className="text-slate-600 text-[10px] uppercase tracking-[0.2em]">
+              Selecione uma aldeia acima para editar os horários
+            </p>
+          </div>
+        ) : null}
       </div>
     </div>
   );
