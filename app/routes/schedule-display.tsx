@@ -57,7 +57,7 @@ export default function ScheduleDisplay({ loaderData }: Route.ComponentProps) {
           backLink="/"
         />
 
-        <div className="p-8 space-y-6">
+        <div className="p-4 sm:p-8 space-y-6">
           <div className="overflow-x-auto border border-slate-700 rounded-xl">
             <table className="w-full text-sm">
               <thead className="bg-slate-800">

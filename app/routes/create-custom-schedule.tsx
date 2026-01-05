@@ -52,7 +52,7 @@ export default function CreateCustomSchedulePage() {
               backLabel="Voltar"
             />
 
-            <div className="p-8 space-y-6">
+            <div className="p-4 sm:p-8 space-y-6">
               <ConfigurationForm onSubmit={handleFormSubmit} />
             </div>
           </>
@@ -65,8 +65,8 @@ export default function CreateCustomSchedulePage() {
               onClick={() => setGeneratedSchedule(null)}
               backLabel="Voltar"
             />
-            <div className="p-8 space-y-6">
-              <div className="p-8 space-y-6">
+            <div className="p-4 sm:p-8 space-y-6">
+              <div className="p-4 sm:p-8 space-y-6">
                 <div className="overflow-x-auto border border-slate-700 rounded-xl">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-800">

@@ -24,7 +24,7 @@ export function WaterManagement() {
       <div className="bg-slate-900 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden backdrop-blur-sm">
         <Header />
 
-        <div className="p-8 space-y-8">
+        <div className="p-4 sm:p-8 space-y-8">
           <YearSelector year={year} onYearChange={handleYearChange} />
 
           <DownloadSection
