@@ -16,6 +16,7 @@ export function PageHeader({
   icon,
   backLink,
   backLabel,
+  onClick,
 }: PageHeaderProps) {
   return (
     <div className="relative overflow-hidden bg-slate-900 border-b border-slate-800">
@@ -25,7 +26,7 @@ export function PageHeader({
       <div className="relative px-6 py-8 sm:px-10 sm:py-12">
         {/* Navegação Superior */}
         <div className="flex items-center justify-between mb-8">
-          {backLink ? (
+          {backLink && (
             <Link
               to={backLink}
               className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-500/50 rounded-xl transition-all duration-200 text-slate-300 hover:text-cyan-400 text-xs font-bold uppercase tracking-widest group shadow-sm"
@@ -36,8 +37,19 @@ export function PageHeader({
               />
               <span>{backLabel || "voltar"}</span>
             </Link>
-          ) : (
-            <div />
+          )}
+
+          {onClick && (
+            <button
+              className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-500/50 rounded-xl transition-all duration-200 text-slate-300 hover:text-cyan-400 text-xs font-bold uppercase tracking-widest group shadow-sm"
+              onClick={onClick}
+            >
+              <Icon
+                name="arrow-right"
+                className="w-3 h-3 rotate-180 group-hover:-translate-x-1 transition-transform"
+              />
+              <span>{backLabel || "voltar"}</span>
+            </button>
           )}
 
           {/* Badge de Status/Ano (Opcional) */}

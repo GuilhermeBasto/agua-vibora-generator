@@ -1,17 +1,17 @@
 # Água Víbora Generator v2
 
-Uma aplicação web moderna para gerar e gerenciar cronogramas de irrigação para o sistema de irrigação de Água de Víbora. Esta versão é construída com React Router e oferece uma interface interativa para criar cronogramas personalizados para as múltiplas aldeias nas regiões de Torre e Santo-António.
+Uma aplicação web moderna para criar e gerir calendarios de rega para o sistema de rega de Água de Víbora. Esta versão é construída com React Router e oferece uma interface interativa para criar calendarios personalizados para as múltiplas aldeias nas regiões de Torre e Santo-António.
 
 ## Recursos
 
-- **Interface Interativa**: Formulário intuitivo para criação de cronogramas personalizados
-- **Suporte Multi-Aldeia**: Gerencia cronogramas para 11 aldeias diferentes em duas regiões
+- **Interface Interativa**: Formulário intuitivo para criação de calendarios personalizados
+- **Suporte Multi-Aldeia**: Gerencia calendarios para 11 aldeias diferentes em duas regiões
 - **Múltiplos Formatos de Exportação**:
   - PDF
   - Excel (.xlsx)
   - CSV
   - iCalendar (.ics) para integração com Google Calendar
-- **Seletor de Ano**: Ajusta automaticamente os cronogramas com base em anos pares/ímpares
+- **Seletor de Ano**: Ajusta automaticamente os calendarios com base em anos pares/ímpares
 - **Geração de Templates**: Cria templates em branco para agendamento manual
 - **Design Responsivo**: Interface otimizada para desktop e mobile
 
@@ -37,20 +37,19 @@ Uma aplicação web moderna para gerar e gerenciar cronogramas de irrigação pa
 ## Estrutura do Projeto
 
 ```
-agua-vibora-generator-v2/
+agua-vibora-generator/
 ├── app/
 │   ├── components/
+│   │   ├── BackgroundGradient.tsx       # Componente de gradiente de fundo
 │   │   ├── ConfigurationForm.tsx        # Formulário de configuração
 │   │   ├── DownloadSection.tsx          # Seção de download
-│   │   ├── ScheduleInputGroup.tsx       # Grupo de entrada de agendamento
-│   │   ├── WaterManagement.tsx          # Gerenciamento de água
-│   │   ├── YearSelector.tsx             # Seletor de ano
-│   │   ├── BackgroundGradient.tsx       # Componente de gradiente
-│   │   ├── Footer.tsx                   # Rodapé
-│   │   ├── Header.tsx                   # Cabeçalho
-│   │   ├── PageHeader.tsx               # Cabeçalho de página
-│   │   ├── InfoCard.tsx                 # Cartão de informação
+│   │   ├── Footer.tsx                   # Rodapé da aplicação
 │   │   ├── Icon.tsx                     # Componente de ícone
+│   │   ├── InfoCard.tsx                 # Cartão de informação
+│   │   ├── PageHeader.tsx               # Cabeçalho de página
+│   │   ├── ScheduleInputGroup.tsx       # Grupo de entrada de agendamento
+│   │   ├── ScheduleTable.tsx            # Tabela de cronograma
+│   │   ├── YearSelector.tsx             # Seletor de ano
 │   │   └── ui/                          # Componentes UI reutilizáveis
 │   ├── lib/
 │   │   ├── schedule.server.ts           # Lógica de geração de cronograma (servidor)
@@ -58,11 +57,12 @@ agua-vibora-generator-v2/
 │   │   ├── constants.ts                 # Constantes da aplicação
 │   │   └── utils.ts                     # Funções utilitárias
 │   ├── routes/
-│   │   ├── api.create-schedule.ts       # Endpoint para criar cronograma
 │   │   ├── api.$format.ts               # Endpoint para download de formatos
+│   │   ├── api.create-schedule.ts       # Endpoint para criar cronograma
 │   │   ├── create-custom-schedule.tsx   # Página de criação de cronograma
-│   │   ├── schedule-display.tsx         # Página de exibição de cronograma
-│   │   └── home.tsx                     # Página inicial
+│   │   ├── home.tsx                     # Página inicial
+│   │   ├── my-schedule.tsx              # Página de visualização do cronograma
+│   │   └── template.tsx                 # Página de template
 │   ├── entry.client.tsx                 # Entrada do cliente
 │   ├── entry.server.tsx                 # Entrada do servidor
 │   ├── root.tsx                         # Componente raiz
@@ -89,7 +89,7 @@ agua-vibora-generator-v2/
 
 ```bash
 git clone <repository-url>
-cd agua-vibora-generator-v2
+cd agua-vibora-generator
 ```
 
 2. Instale as dependências:
@@ -138,8 +138,8 @@ POST /api/create-schedule
 
 ```json
 {
-  "name": "Cronograma 2025",
-  "year": "2025",
+  "name": "Cronograma 2026",
+  "year": "2026",
   "schedules": {
     "Torre": ["1h30 da tarde", "12h até as 2h da tarde"],
     "Passo": ["10 da noite até ás 1h30/5h30 da tarde"]
@@ -154,8 +154,8 @@ POST /api/create-schedule
   "data": [
     /* dados do cronograma gerado */
   ],
-  "name": "Cronograma 2025",
-  "year": "2025"
+  "name": "Cronograma 2026",
+  "year": "2026"
 }
 ```
 
@@ -164,7 +164,7 @@ POST /api/create-schedule
 Baixa o cronograma em diferentes formatos.
 
 ```
-GET /api/:format?year=2025
+GET /api/:format?year=2026
 ```
 
 **Parâmetros:**
@@ -175,18 +175,18 @@ GET /api/:format?year=2025
 
 **Exemplos:**
 
-- `/api/xlsx?year=2025` - Cronograma completo em Excel
-- `/api/pdf?year=2025&template=true` - Template PDF vazio
-- `/api/ics?year=2025` - Arquivo iCalendar para Google Calendar
+- `/api/xlsx?year=2026` - Cronograma completo em Excel
+- `/api/pdf?year=2026&template=true` - Template PDF vazio
+- `/api/ics?year=2026` - Arquivo iCalendar para Google Calendar
 
 ## Lógica de Agendamento
 
-O cronograma de irrigação segue estas regras:
+O cronograma de rega segue estas regras:
 
 - **Temporada**: Funciona de 25 de junho a 29 de setembro cada ano
 - **Rotação**: As aldeias seguem um padrão específico de rotação que muda anualmente
-- **Variações de Horário**: Diferentes cronogramas se aplicam a Torre, Passo e Figueiredo com base em anos pares/ímpares
-- **Ano de Referência**: 2025 é usado como o ano base para calcular rotações
+- **Variações de Horário**: Diferentes calendarios se aplicam a Torre, Passo e Figueiredo com base em anos pares/ímpares
+- **Ano de Referência**: 2026 é usado como o ano base para calcular rotações
 
 ## Desenvolvimento
 
@@ -217,10 +217,10 @@ O cronograma de irrigação segue estas regras:
 Para construir e executar com Docker:
 
 ```bash
-docker build -t agua-vibora-generator-v2 .
+docker build -t agua-vibora-generator .
 
 # Executar o container
-docker run -p 3000:3000 agua-vibora-generator-v2
+docker run -p 3000:3000 agua-vibora-generator
 ```
 
 A aplicação containerizada pode ser implantada em qualquer plataforma que suporte Docker:

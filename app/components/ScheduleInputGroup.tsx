@@ -122,75 +122,82 @@ export function ScheduleInputGroup({
         </div>
       )}
 
-      <div className="h-px bg-slate-800/50 w-full my-6"></div>
+      {addedVillages.length > 0 && (
+        <>
+          <div className="h-px bg-slate-800/50 w-full my-6"></div>
 
-      {/* Editar Horários */}
-      <div className="space-y-4">
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <Select value={selectedVillage} onValueChange={setSelectedVillage}>
-              <SelectTrigger className="w-full h-[58px] bg-slate-900 border-slate-700 rounded-2xl px-5 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
-                <SelectValue placeholder="Configurar horários de..." />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-slate-700 text-white rounded-xl">
-                {addedVillages.map((v) => (
-                  <SelectItem
-                    key={v}
-                    value={v}
-                    className="focus:bg-cyan-500/20 focus:text-cyan-400 cursor-pointer"
-                  >
-                    {v}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Editar Horários */}
+          <div className="space-y-4">
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Select
+                  value={selectedVillage}
+                  onValueChange={setSelectedVillage}
+                >
+                  <SelectTrigger className="w-full h-[58px] bg-slate-900 border-slate-700 rounded-2xl px-5 text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
+                    <SelectValue placeholder="Configurar horários de..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700 text-white rounded-xl">
+                    {addedVillages.map((v) => (
+                      <SelectItem
+                        key={v}
+                        value={v}
+                        className="focus:bg-cyan-500/20 focus:text-cyan-400 cursor-pointer"
+                      >
+                        {v}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {selectedVillage && (
-            <button
-              type="button"
-              onClick={() => handleRemoveVillage(selectedVillage)}
-              className="p-4 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 rounded-2xl transition-all active:scale-90"
-              title="Remover aldeia"
-            >
-              <Icon name="x" className="w-6 h-6" />
-            </button>
-          )}
-        </div>
-
-        {selectedVillage ? (
-          <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-              Definir Momentos: {selectedVillage}
-            </label>
-
-            <textarea
-              value={schedules[selectedVillage]?.join("\n") || ""}
-              onChange={handleTextChange}
-              rows={5}
-              className="w-full bg-slate-950/60 border border-slate-700 rounded-3xl px-6 py-5 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-500/50 outline-none placeholder-slate-800 transition-all shadow-2xl"
-              placeholder="Ex:&#10;1h30 da tarde&#10;Noite (22h às 06h)"
-            />
-
-            <div className="flex items-start gap-3 p-4 bg-cyan-500/5 rounded-2xl border border-cyan-500/10">
-              <Icon
-                name="info"
-                className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5"
-              />
-              <p className="text-[11px] text-slate-400 leading-normal">
-                Escreva cada horário numa linha nova. A primeira linha será o
-                destaque visual no calendário final.
-              </p>
+              {selectedVillage && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveVillage(selectedVillage)}
+                  className="p-4 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-500 rounded-2xl transition-all active:scale-90"
+                  title="Remover aldeia"
+                >
+                  <Icon name="x" className="w-6 h-6" />
+                </button>
+              )}
             </div>
+
+            {selectedVillage ? (
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-4 duration-300">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                  Definir horarios: {selectedVillage}
+                </label>
+
+                <textarea
+                  value={schedules[selectedVillage]?.join("\n") || ""}
+                  onChange={handleTextChange}
+                  rows={5}
+                  className="w-full bg-slate-950/60 border border-slate-700 rounded-3xl px-6 py-5 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-500/50 outline-none placeholder-slate-800 transition-all shadow-2xl"
+                  placeholder="Ex:&#10;1h30 da tarde&#10;Por do sol ate a Meia noite"
+                />
+
+                <div className="flex items-start gap-3 p-4 bg-cyan-500/5 rounded-2xl border border-cyan-500/10 ">
+                  <Icon
+                    name="info"
+                    className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5"
+                  />
+                  <p className="text-[11px] text-slate-400 leading-normal">
+                    Escreva cada horário numa linha nova. A primeira linha será
+                    o destaque visual no calendário final.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center border-2 border-dashed border-slate-800/50 rounded-3xl bg-slate-900/10">
+                <p className="text-slate-600 text-[10px] uppercase tracking-[0.2em]">
+                  Selecione uma aldeia acima para editar os horários
+                </p>
+              </div>
+            )}
           </div>
-        ) : addedVillages.length > 0 ? (
-          <div className="py-12 text-center border-2 border-dashed border-slate-800/50 rounded-3xl bg-slate-900/10">
-            <p className="text-slate-600 text-[10px] uppercase tracking-[0.2em]">
-              Selecione uma aldeia acima para editar os horários
-            </p>
-          </div>
-        ) : null}
-      </div>
+        </>
+      )}
     </div>
   );
 }

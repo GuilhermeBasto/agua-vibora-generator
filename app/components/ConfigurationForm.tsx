@@ -25,7 +25,6 @@ export function ConfigurationForm({ onSubmit }: ConfigurationFormProps) {
 
   return (
     <form onSubmit={handleFormSubmit} className="space-y-8">
-      {/* Nome e Ano - Grid Responsivo */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="block text-[10px] font-bold text-cyan-400 uppercase tracking-[0.2em] ml-1">
@@ -35,7 +34,7 @@ export function ConfigurationForm({ onSubmit }: ConfigurationFormProps) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ex: Escala Verão 2026"
+            placeholder="Ex: Aviança 2026"
             required
             className="w-full px-5 py-4 bg-slate-950/40 border border-slate-700/50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-white placeholder-slate-600 transition-all"
           />
@@ -55,10 +54,9 @@ export function ConfigurationForm({ onSubmit }: ConfigurationFormProps) {
         </div>
       </div>
 
-      {/* Secção de Horários (Groups de Aldeias) */}
       <div className="pt-4">
         <ScheduleInputGroup
-          title="Horários por Aldeia"
+          title="Horários por Casal"
           color="emerald"
           year={parseInt(year)}
           schedules={schedules}
@@ -68,13 +66,12 @@ export function ConfigurationForm({ onSubmit }: ConfigurationFormProps) {
         />
       </div>
 
-      {/* Botão de Submissão - Grande para Mobile */}
       <div className="pt-6 border-t border-slate-800">
         <button
           type="submit"
-          className="w-full sm:w-auto sm:min-w-[200px] float-right px-8 py-5 bg-gradient-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 rounded-2xl font-bold transition-all text-white shadow-lg shadow-cyan-900/30 active:scale-[0.98] uppercase tracking-widest text-xs"
+          className="w-full sm:w-auto sm:min-w-50 float-right px-8 py-5 bg-linear-to-r from-cyan-600 to-emerald-600 hover:from-cyan-500 hover:to-emerald-500 rounded-2xl font-bold transition-all text-white shadow-lg shadow-cyan-900/30 active:scale-[0.98] uppercase tracking-widest text-xs"
         >
-          Gerar Aviança
+          Criar Aviança
         </button>
         <div className="clear-both"></div>
       </div>

@@ -14,7 +14,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getPageNumbers(
   currentPage: number,
   totalPages: number,
-  maxVisible: number = 7
+  maxVisible: number = 5
 ): (number | "ellipsis")[] {
   const pages: (number | "ellipsis")[] = [];
 

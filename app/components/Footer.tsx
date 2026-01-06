@@ -26,12 +26,11 @@ export function Footer() {
           </span>
         </div>
 
-        {/* Branding e Copyright */}
         <div className="flex flex-col items-center space-y-2 text-center">
           <div className="flex items-center space-x-2 text-slate-400">
             <Icon name="water" className="w-4 h-4 text-cyan-500/60" />
             <span className="font-semibold tracking-wide uppercase text-[10px] sm:text-xs">
-              Sistema de Gestão de Aviança
+              Sistema de Gestão de Águas de Víbora
             </span>
           </div>
 

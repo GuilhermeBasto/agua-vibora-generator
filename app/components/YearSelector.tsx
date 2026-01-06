@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Icon } from "./Icon";
 
 interface YearSelectorProps {
   year: number;
@@ -33,16 +32,6 @@ export function YearSelector({ year, onYearChange }: YearSelectorProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <Icon name="calendar" className="w-4 h-4 text-cyan-500/70" />
-        <label
-          htmlFor="year"
-          className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]"
-        >
-          Ciclo de Aviança (Ano)
-        </label>
-      </div>
-
       <div className="relative group">
         <input
           type="number"
@@ -55,20 +44,14 @@ export function YearSelector({ year, onYearChange }: YearSelectorProps) {
           placeholder="2026"
         />
 
-        {/* Adereço visual: Indicador lateral de foco */}
         <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-cyan-500 rounded-r-full scale-y-0 group-focus-within:scale-y-100 transition-transform duration-300"></div>
 
-        {/* Botões de atalho subtis (Opcional, apenas visual) */}
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col text-slate-600">
           <span className="text-[10px] select-none italic font-mono uppercase tracking-tighter">
             Editável
           </span>
         </div>
       </div>
-
-      <p className="text-[10px] text-slate-500 italic ml-1">
-        A escala será recalculada automaticamente para o ano selecionado.
-      </p>
     </div>
   );
 }
