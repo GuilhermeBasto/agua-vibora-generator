@@ -188,6 +188,33 @@ O cronograma de rega segue estas regras:
 - **Variações de Horário**: Diferentes calendarios se aplicam a Torre, Passo e Figueiredo com base em anos pares/ímpares
 - **Ano de Referência**: 2026 é usado como o ano base para calcular rotações
 
+## Utilitários Compartilhados (server)
+
+- **[app/lib/utils.server.ts](app/lib/utils.server.ts)** fornece utilitários comuns usados pelos geradores:
+  - `getOrder(list, year, referenceYear)`: calcula a rotação anual de uma lista.
+  - `getYearScheduleDurations(year, schedule)`: seleciona configuração de horários para anos pares/ímpares.
+  - `getDateRange(year, startCfg, endCfg)`: cria datas de início/fim da temporada.
+  - `generateSchedulePointers(config)`: inicializa ponteiros por local para ciclagem de rótulos.
+  - `buildScheduleData(...)`: constrói entradas diárias reutilizando a lógica de rotação e formatação.
+  - `generatePDF(title, data)`: renderiza PDF com layout compacto (margens e espaçamento otimizados).
+
+Ambos os ficheiros de servidor já usam estes helpers:
+
+- [app/lib/schedule.server.ts](app/lib/schedule.server.ts)
+- [app/lib/poolSchedule.server.ts](app/lib/poolSchedule.server.ts)
+
+## Hook de Paginação (client)
+
+- **[app/hooks/usePagination.ts](app/hooks/usePagination.ts)** encapsula paginação de listas:
+  - Entrada: `data`, `currentPage`, `itemsPerPage` (padrão 20)
+  - Saída: `paginatedData`, `totalPages`, `pageNumbers`
+  - Uso exemplo: ver [app/routes/create-custom-schedule.tsx](app/routes/create-custom-schedule.tsx)
+
+## Ajustes de UI
+
+- Em [app/components/ScheduleInputGroup.tsx](app/components/ScheduleInputGroup.tsx), o seletor "Configurar horários de..." só aparece quando existem aldeias adicionadas.
+- Em [app/components/Card.tsx](app/components/Card.tsx), as classes de hover foram fixas (sem template strings dinâmicas) para suportar cores como emerald com Tailwind.
+
 ## Desenvolvimento
 
 ### Scripts

@@ -24,10 +24,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="relative w-full max-w-6xl mx-auto px-4 py-6 sm:px-0">
-      {/* Background Global */}
-
       <div className="bg-slate-900/80 rounded-3xl shadow-2xl border border-slate-800 overflow-hidden backdrop-blur-xl">
-        {/* O Header agora será o escuro/compacto que definiu no componente */}
         <PageHeader
           title={info.title}
           subtitle={info.subtitle}
@@ -35,7 +32,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         />
 
         <div className="p-6 sm:p-12 space-y-16">
-          {/* Seção de Texto Imersivo */}
           <div className="max-w-3xl mx-auto text-center space-y-8">
             <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
               Uma Tradição que <span className="text-cyan-500">Flui</span> no
@@ -57,34 +53,37 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </p>
           </div>
 
-          {/* Grid de Navegação Principal */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Card: O Meu Horário */}
-
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card
               color="cyan"
               linkTo="/my-schedule"
               title="O Meu Horário"
-              description="Consulta personalizada para herdeiros. Encontra rapidamente as tuas horas pelo nome."
-              actionLabel="Aceder Agora"
+              description="Consulta personalizada. Encontra rapidamente as tuas horas de rega."
+              actionLabel="Consultar"
             />
 
-            {/* Card: Calendário Geral */}
+            <Card
+              color="emerald"
+              linkTo="/irrigation-pool-schedule"
+              title="Poça do Coblinho"
+              description="Acesso ao calendário específico da Poça do Coblinho e seus regantes."
+              actionLabel="Ver Calendário"
+            />
+
             <Card
               color="purple"
               linkTo="/template"
               title="Calendário Geral"
-              description="Consulta o calendário padrão da Levada da Víbora para todos os casais."
-              actionLabel="Ver Completo"
+              description="Consulta o calendário padrão da Víbora para todos os casais."
+              actionLabel="Ver Tudo"
             />
 
-            {/* Card: Configurações */}
             <Card
               color="amber"
               linkTo="/create-custom-schedule"
               title="Configurações"
-              description="Criação de avianças personalizadas. Ajusta horários e rotações conforme as tuas necessidades."
-              actionLabel="Configurar Agora"
+              description="Ajusta horários e avianças personalizadas conforme a necessidade."
+              actionLabel="Configurar"
             />
           </div>
         </div>

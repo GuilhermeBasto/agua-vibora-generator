@@ -6,10 +6,20 @@
 
 import ExcelJS from "exceljs";
 import PDFDocument from "pdfkit";
-import { format, set, addDays } from "date-fns";
+import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { createEvents, type EventAttributes } from "ics";
 import type { ScheduleEntry } from "./types";
+import {
+  addBordersToCell,
+  addTitleToWorksheet,
+  generatePDF,
+  generateSchedulePointers,
+  buildScheduleData,
+  getOrder,
+  getYearScheduleDurations,
+  getDateRange,
+} from "./utils.server";
 
 /** Reference year for schedule rotation calculations */
 const REFERENCE_YEAR = 2025;
@@ -83,19 +93,14 @@ const isScheduledVillage = (village: string): village is ScheduledVillage => {
  * @param referenceYear - The reference year for calculating offset
  * @returns The rotated list
  */
-const getOrder = <T>(list: T[], year: number, referenceYear: number): T[] => {
-  const offset = (year - referenceYear) % list.length;
-  return [...list.slice(offset), ...list.slice(0, offset)];
-};
+// getOrder moved to utils.server
 
 /**
  * Gets the time schedule durations for a specific year
  * @param year - The target year
  * @returns Schedule durations for odd or even year
  */
-const getYearScheduleDurations = (year: number): YearScheduleConfig => {
-  return year % 2 === 0 ? YEAR_SCHEDULE.even : YEAR_SCHEDULE.odd;
-};
+// getYearScheduleDurations moved to utils.server
 
 /**
  * Generates the complete village rotation schedule for a given year
@@ -119,39 +124,7 @@ const getYearSchedule = (year: number): string[] => {
  * @param year - The target year
  * @returns Object containing start and end dates
  */
-const getDateRange = (year: number): { startDate: Date; endDate: Date } => {
-  const startDate = set(new Date(), {
-    year,
-    month: SCHEDULE_START.month,
-    date: SCHEDULE_START.date,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
-  const endDate = set(new Date(), {
-    year,
-    month: SCHEDULE_END.month,
-    date: SCHEDULE_END.date,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
-  return { startDate, endDate };
-};
-
-const generateSchedulePointers = (
-  config: YearScheduleConfig
-): Record<string, number> => {
-  return Object.keys(config).reduce(
-    (acc, location) => {
-      acc[location] = 0;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-};
+// getDateRange moved to utils.server
 
 /**
  * Generates the complete schedule data for the year
@@ -164,40 +137,33 @@ const generateScheduleData = (
   template: boolean = false
 ): ScheduleEntry[] => {
   const yearSequence = getYearSchedule(year);
-  const schedulesByLocation = template ? {} : getYearScheduleDurations(year);
+  const schedulesByLocation = template
+    ? {}
+    : getYearScheduleDurations(year, YEAR_SCHEDULE);
   const schedulePointers: Record<string, number> =
     generateSchedulePointers(schedulesByLocation);
 
-  const { startDate, endDate } = getDateRange(year);
-  const scheduleData: ScheduleEntry[] = [];
+  const { startDate, endDate } = getDateRange(
+    year,
+    SCHEDULE_START,
+    SCHEDULE_END
+  );
+  const baseData = buildScheduleData(
+    yearSequence,
+    schedulesByLocation,
+    schedulePointers,
+    startDate,
+    endDate,
+    (d) => format(d, DATE_FORMAT, { locale: pt })
+  );
 
-  let currentDate = startDate;
-  let dayIndex = 0;
-
-  while (currentDate <= endDate) {
-    const locationName = yearSequence[dayIndex % yearSequence.length];
-    let scheduleStr = "";
-
-    if (isScheduledVillage(locationName) && schedulesByLocation[locationName]) {
-      const list = schedulesByLocation[locationName];
-      scheduleStr = list[schedulePointers[locationName] % list.length];
-      schedulePointers[locationName]++;
-    }
-
-    scheduleData.push({
-      date: currentDate,
-      dateFormatted: format(currentDate, DATE_FORMAT, { locale: pt }),
-      location: locationName,
-      schedule: scheduleStr,
-      isBold:
-        !template &&
-        isScheduledVillage(locationName) &&
-        !!schedulesByLocation[locationName],
-    });
-
-    currentDate = addDays(currentDate, 1);
-    dayIndex++;
-  }
+  const scheduleData: ScheduleEntry[] = baseData.map((entry) => ({
+    ...entry,
+    isBold:
+      !template &&
+      isScheduledVillage(entry.location) &&
+      !!schedulesByLocation[entry.location],
+  }));
 
   return scheduleData;
 };
@@ -215,67 +181,34 @@ const generateCustomScheduleData = (
   const yearSequence = getYearSchedule(year);
   const schedulePointers: Record<string, number> =
     generateSchedulePointers(schedulesByLocation);
-  const { startDate, endDate } = getDateRange(year);
-  const scheduleData: ScheduleEntry[] = [];
+  const { startDate, endDate } = getDateRange(
+    year,
+    SCHEDULE_START,
+    SCHEDULE_END
+  );
+  const baseData = buildScheduleData(
+    yearSequence,
+    schedulesByLocation,
+    schedulePointers,
+    startDate,
+    endDate,
+    (d) => format(d, DATE_FORMAT, { locale: pt })
+  );
 
-  let currentDate = startDate;
-  let dayIndex = 0;
-
-  while (currentDate <= endDate) {
-    const locationName = yearSequence[dayIndex % yearSequence.length];
-    let scheduleStr = "";
-
-    // Check if location has custom schedules (remove isScheduledVillage restriction)
-    if (schedulesByLocation[locationName]) {
-      const list = schedulesByLocation[locationName];
-      scheduleStr = list[schedulePointers[locationName] % list.length];
-      schedulePointers[locationName]++;
-    }
-
-    scheduleData.push({
-      date: currentDate,
-      dateFormatted: format(currentDate, DATE_FORMAT, { locale: pt }),
-      location: locationName,
-      schedule: scheduleStr,
-      isBold: !!schedulesByLocation[locationName],
-    });
-
-    currentDate = addDays(currentDate, 1);
-    dayIndex++;
-  }
+  const scheduleData: ScheduleEntry[] = baseData.map((entry) => ({
+    ...entry,
+    isBold: !!schedulesByLocation[entry.location],
+  }));
 
   return scheduleData;
 };
 
 /**
- * Adds black borders to an Excel cell
- * @param cell - ExcelJS cell object
+ * Generates the complete schedule data for the year
+ * @param year - The target year
+ * @param template - If true, generates a template without time schedules
+ * @returns Array of schedule entries
  */
-const addBordersToCell = (cell: ExcelJS.Cell): void => {
-  cell.border = {
-    top: { style: "thin", color: { argb: "FF000000" } },
-    left: { style: "thin", color: { argb: "FF000000" } },
-    bottom: { style: "thin", color: { argb: "FF000000" } },
-    right: { style: "thin", color: { argb: "FF000000" } },
-  };
-};
-
-/**
- * Adds a formatted title row to an Excel worksheet
- * @param worksheet - ExcelJS worksheet object
- * @param year - The year to display in the title
- */
-const addTitleToWorksheet = (
-  worksheet: ExcelJS.Worksheet,
-  year: number
-): void => {
-  worksheet.insertRow(1, ["Aviança da Água de Víbora - Ano " + year]);
-  worksheet.mergeCells("A1:C1");
-  const titleCell = worksheet.getCell("A1");
-  titleCell.font = { name: "Arial", size: 14, bold: true };
-  titleCell.alignment = { vertical: "middle", horizontal: "center" };
-  worksheet.addRow([]); // Empty separator row
-};
 
 /**
  * Generates an Excel workbook with the irrigation schedule
@@ -300,7 +233,7 @@ const generateScheduleWorkbook = (
   ];
 
   // Add title
-  addTitleToWorksheet(worksheet, year);
+  addTitleToWorksheet(worksheet, year, "Agua de Vibora");
 
   // Add data rows
   scheduleData.forEach((item) => {
@@ -333,82 +266,7 @@ const generateScheduleWorkbook = (
 const generateSchedulePDF = (year: number, template: boolean = false) => {
   const scheduleData = generateScheduleData(year, template);
 
-  // PDF configuration
-  const doc = new PDFDocument({ margin: 50, size: "A4" });
-
-  // Title
-  doc
-    .fontSize(16)
-    .font("Helvetica-Bold")
-    .text(`Aviança da Água de Víbora - Ano ${year}`, {
-      align: "center",
-    });
-  doc.moveDown(2);
-
-  // Table configuration
-  const startX = 50;
-  const pageWidth = 595; // A4 width in points
-  const margin = 50;
-  const totalWidth = pageWidth - 2 * margin;
-  const colWidths = {
-    date: 120,
-    location: 150,
-    schedule: totalWidth - 120 - 150,
-  };
-  const rowHeight = 20;
-
-  let currentY = doc.y;
-
-  // Draw data rows
-  scheduleData.forEach((item) => {
-    // Check if we need a new page
-    if (currentY > 720) {
-      doc.addPage();
-      currentY = 50;
-    }
-
-    // Set font based on bold flag
-    doc.font(item.isBold ? "Helvetica-Bold" : "Helvetica").fontSize(10);
-
-    // Date column
-    doc.rect(startX, currentY, colWidths.date, rowHeight).stroke();
-    doc.text(item.dateFormatted, startX + 5, currentY + 5, {
-      width: colWidths.date - 10,
-      align: "left",
-    });
-
-    // Location column
-    doc
-      .rect(startX + colWidths.date, currentY, colWidths.location, rowHeight)
-      .stroke();
-    doc.text(item.location, startX + colWidths.date + 5, currentY + 5, {
-      width: colWidths.location - 10,
-      align: "left",
-    });
-
-    // Schedule column
-    doc
-      .rect(
-        startX + colWidths.date + colWidths.location,
-        currentY,
-        colWidths.schedule,
-        rowHeight
-      )
-      .stroke();
-    doc.text(
-      item.schedule,
-      startX + colWidths.date + colWidths.location + 5,
-      currentY + 5,
-      {
-        width: colWidths.schedule - 10,
-        align: "left",
-      }
-    );
-
-    currentY += rowHeight;
-  });
-
-  return doc;
+  return generatePDF(`Aviança da Água de Víbora - Ano ${year}`, scheduleData);
 };
 
 /**

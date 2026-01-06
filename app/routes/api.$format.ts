@@ -5,10 +5,24 @@ import {
   generateScheduleCalendar,
 } from "~/lib/schedule.server";
 
-const getFileName = (year: number, isTemplate: boolean, format: string) => {
+import {
+  generatePoolSchedulePDF,
+  generatePoolScheduleWorkbook,
+} from "~/lib/poolSchedule.server";
+
+type Format = "pdf" | "xlsx" | "ics";
+type ScheduleType = "irrigation" | "irrigation-pool";
+
+const getFileName = (
+  year: number,
+  isTemplate: boolean,
+  format: Format,
+  type: ScheduleType = "irrigation"
+) => {
+  const prefix = type === "irrigation-pool" ? "coblinho" : "vibora";
   return isTemplate
-    ? `agua-vibora-${year}-template.${format}`
-    : `agua-vibora-${year}.${format}`;
+    ? `agua-${prefix}-${year}-template.${format}`
+    : `agua-${prefix}-${year}.${format}`;
 };
 
 export async function loader({ params, request }: Route.LoaderArgs) {
@@ -17,6 +31,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     url.searchParams.get("year") || String(new Date().getFullYear()),
     10
   );
+  const type: ScheduleType =
+    (url.searchParams.get("type") as ScheduleType) || "irrigation";
   const isTemplate = url.searchParams.get("template") === "true";
   const format = params.format?.toLowerCase();
 
@@ -28,7 +44,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   try {
     switch (format) {
       case "pdf": {
-        const pdfDoc = generateSchedulePDF(year, isTemplate);
+        const pdfDoc =
+          type === "irrigation-pool"
+            ? generatePoolSchedulePDF(year)
+            : generateSchedulePDF(year, isTemplate);
         const chunks: Buffer[] = [];
 
         const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
@@ -38,7 +57,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           pdfDoc.end();
         });
 
-        const fileName = getFileName(year, isTemplate, format);
+        const fileName = getFileName(year, isTemplate, format, type);
 
         return new Response(new Uint8Array(pdfBuffer), {
           headers: {
@@ -51,8 +70,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
       case "xlsx": {
         const workbook = generateScheduleWorkbook(year, isTemplate);
+        type === "irrigation-pool"
+          ? generatePoolScheduleWorkbook(year)
+          : generateScheduleWorkbook(year, isTemplate);
         const buffer = await workbook.xlsx.writeBuffer();
-        const fileName = getFileName(year, isTemplate, format);
+        const fileName = getFileName(year, isTemplate, format, type);
 
         return new Response(new Uint8Array(buffer), {
           headers: {
@@ -65,16 +87,25 @@ export async function loader({ params, request }: Route.LoaderArgs) {
       }
 
       case "ics": {
-        const result = generateScheduleCalendar(year);
-        if ("error" in result) throw result.error;
+        if (type === "irrigation-pool") {
+          return new Response(
+            "Formato ICS não suportado para Poça do Coblinho",
+            {
+              status: 400,
+            }
+          );
+        } else {
+          const result = generateScheduleCalendar(year);
+          if ("error" in result) throw result.error;
 
-        return new Response(result.value, {
-          headers: {
-            "Content-Type": "text/calendar; charset=utf-8",
-            "Content-Disposition": `attachment; filename="agua-vibora-${year}.ics"`,
-            "Cache-Control": "public, max-age=86400",
-          },
-        });
+          return new Response(result.value, {
+            headers: {
+              "Content-Type": "text/calendar; charset=utf-8",
+              "Content-Disposition": `attachment; filename="agua-vibora-${year}.ics"`,
+              "Cache-Control": "public, max-age=86400",
+            },
+          });
+        }
       }
 
       default:

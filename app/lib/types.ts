@@ -12,7 +12,7 @@ export interface ScheduleEntry {
   dateFormatted: string;
   location: string;
   schedule: string;
-  isBold: boolean;
+  isBold?: boolean;
 }
 
 export interface GeneratedSchedule {
