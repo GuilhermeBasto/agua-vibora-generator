@@ -85,7 +85,7 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
                   reloadDocument
                   className="flex items-center gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <Icon name="calendar" className="w-3.5 h-3.5" /> CALENDARIO
+                  <Icon name="calendar" className="w-3.5 h-3.5" /> ICS
                 </Link>
               </div>
             </div>

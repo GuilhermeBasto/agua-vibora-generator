@@ -95,7 +95,7 @@ export function InstallBanner() {
   const subtitle =
     mode === "ios"
       ? "No iOS, usa Partilhar > Adicionar ao Ecra Principal para guardar esta aplicacao."
-      : "Guarda este site no ecra inicial para acesso rapido e offline.";
+      : "Guarda este site no ecra inicial para acesso rapido.";
 
   return (
     <div className="fixed inset-x-4 bottom-6 z-50 sm:inset-x-auto sm:left-auto sm:right-6 sm:max-w-sm">
