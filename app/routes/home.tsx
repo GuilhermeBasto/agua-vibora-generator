@@ -69,14 +69,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               description="Acesso ao calendário específico da Poça do Coblinho e seus regantes."
               actionLabel="Ver Calendário"
             />
-
+            {/* 
             <Card
               color="purple"
               linkTo="/template"
               title="Calendário Geral"
               description="Consulta o calendário padrão da Víbora para todos os casais."
               actionLabel="Ver Tudo"
-            />
+            /> */}
 
             <Card
               color="amber"

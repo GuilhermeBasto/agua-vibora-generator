@@ -25,6 +25,16 @@ const getFileName = (
     : `agua-${prefix}-${year}.${format}`;
 };
 
+const getContentDispositionHeader = (fileName: string) => {
+  // Properly encode filename for Content-Disposition header
+  // RFC 5987 compliant encoding for special characters
+  const encoded = encodeURIComponent(fileName).replace(
+    /[!'()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+  return `attachment; filename*=UTF-8''${encoded}; filename="${fileName}"`;
+};
+
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const year = parseInt(
@@ -62,17 +72,17 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         return new Response(new Uint8Array(pdfBuffer), {
           headers: {
             "Content-Type": "application/pdf",
-            "Content-Disposition": `attachment; filename="${fileName}"`,
+            "Content-Disposition": getContentDispositionHeader(fileName),
             "Cache-Control": "public, max-age=86400",
           },
         });
       }
 
       case "xlsx": {
-        const workbook = generateScheduleWorkbook(year, isTemplate);
-        type === "irrigation-pool"
-          ? generatePoolScheduleWorkbook(year)
-          : generateScheduleWorkbook(year, isTemplate);
+        const workbook =
+          type === "irrigation-pool"
+            ? generatePoolScheduleWorkbook(year)
+            : generateScheduleWorkbook(year, isTemplate);
         const buffer = await workbook.xlsx.writeBuffer();
         const fileName = getFileName(year, isTemplate, format, type);
 
@@ -80,7 +90,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           headers: {
             "Content-Type":
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition": `attachment; filename="${fileName}"`,
+            "Content-Disposition": getContentDispositionHeader(fileName),
             "Cache-Control": "public, max-age=86400",
           },
         });
@@ -97,11 +107,12 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         } else {
           const result = generateScheduleCalendar(year);
           if ("error" in result) throw result.error;
+          const fileName = getFileName(year, false, "ics", type);
 
           return new Response(result.value, {
             headers: {
               "Content-Type": "text/calendar; charset=utf-8",
-              "Content-Disposition": `attachment; filename="agua-vibora-${year}.ics"`,
+              "Content-Disposition": getContentDispositionHeader(fileName),
               "Cache-Control": "public, max-age=86400",
             },
           });

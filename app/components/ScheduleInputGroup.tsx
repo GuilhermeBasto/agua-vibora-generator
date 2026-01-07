@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import InfoBlock from "./InfoBlock";
 
 interface ScheduleInputGroupProps {
   title: string;
@@ -177,7 +178,12 @@ export function ScheduleInputGroup({
                   placeholder="Ex:&#10;1h30 da tarde&#10;Por do sol ate a Meia noite"
                 />
 
-                <div className="flex items-start gap-3 p-4 bg-cyan-500/5 rounded-2xl border border-cyan-500/10 ">
+                <InfoBlock
+                  text="Escreva cada horário numa linha nova. A primeira linha será o destaque visual no calendário final."
+                  type="info"
+                />
+
+                {/*  <div className="flex items-start gap-3 p-4 bg-cyan-500/5 rounded-2xl border border-cyan-500/10 ">
                   <Icon
                     name="info"
                     className="w-5 h-5 text-cyan-500 shrink-0 mt-0.5"
@@ -186,7 +192,7 @@ export function ScheduleInputGroup({
                     Escreva cada horário numa linha nova. A primeira linha será
                     o destaque visual no calendário final.
                   </p>
-                </div>
+                </div> */}
               </div>
             ) : (
               <div className="py-12 text-center border-2 border-dashed border-slate-800/50 rounded-3xl bg-slate-900/10">

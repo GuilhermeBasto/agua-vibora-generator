@@ -5,9 +5,9 @@ import { Footer } from "~/components/Footer";
 import { PageHeader } from "~/components/PageHeader";
 import type { CustomSchedule, GeneratedSchedule } from "~/lib/types";
 import { useEffect, useState } from "react";
-import { Icon } from "~/components/Icon";
 import { ScheduleTable } from "~/components/ScheduleTable";
 import { usePagination } from "~/hooks/usePagination";
+import InfoBlock from "~/components/InfoBlock";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -60,20 +60,13 @@ export default function CreateCustomSchedulePage() {
               backLink="/"
               backLabel="Voltar"
             />
-            <div className="p-4 sm:p-10">
-              <div className="mb-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start space-x-3">
-                <Icon
-                  name="info"
-                  className="w-5 h-5 text-amber-500 mt-0.5 shrink-0"
-                />
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Esta ferramenta permite criar uma aviança personalizada.
-                  Defina os seus próprios horários e rotações para as aldeias
-                  conforme as suas necessidades.
-                </p>
-              </div>
+            <div className="p-4 sm:p-10 ">
+              <InfoBlock
+                text="Esta ferramenta permite criar uma aviança personalizada. Defina os seus próprios horários e rotações para as aldeias conforme as suas necessidades."
+                type="warning"
+              />
 
-              <div className="bg-slate-950/30 rounded-2xl border border-slate-700/30 p-2 sm:p-6">
+              <div className="mt-8 bg-slate-950/30 rounded-2xl border border-slate-700/30 p-2 sm:p-6">
                 <ConfigurationForm onSubmit={handleFormSubmit} />
               </div>
             </div>
@@ -89,20 +82,17 @@ export default function CreateCustomSchedulePage() {
             />
 
             <div className="p-4 sm:p-10 space-y-8">
-              {generatedSchedule &&
-                (() => {
-                  return (
-                    <ScheduleTable
-                      schedule={paginatedData}
-                      totalPages={totalPages}
-                      page={currentPage}
-                      pageNumbers={pageNumbers}
-                      onNextPage={() => setCurrentPage((prev) => prev + 1)}
-                      onPreviousPage={() => setCurrentPage((prev) => prev - 1)}
-                      goToPage={(pageNum) => setCurrentPage(pageNum)}
-                    />
-                  );
-                })()}
+              {generatedSchedule && (
+                <ScheduleTable
+                  schedule={paginatedData}
+                  totalPages={totalPages}
+                  page={currentPage}
+                  pageNumbers={pageNumbers}
+                  onNextPage={() => setCurrentPage((prev) => prev + 1)}
+                  onPreviousPage={() => setCurrentPage((prev) => prev - 1)}
+                  goToPage={(pageNum) => setCurrentPage(pageNum)}
+                />
+              )}
             </div>
           </>
         )}
