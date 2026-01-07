@@ -4,6 +4,7 @@ import {
   generateScheduleWorkbook,
   generateScheduleCalendar,
 } from "~/lib/schedule.server";
+import { getContentDispositionHeader } from "~/lib/utils.server";
 
 import {
   generatePoolSchedulePDF,
@@ -25,15 +26,7 @@ const getFileName = (
     : `agua-${prefix}-${year}.${format}`;
 };
 
-const getContentDispositionHeader = (fileName: string) => {
-  // Properly encode filename for Content-Disposition header
-  // RFC 5987 compliant encoding for special characters
-  const encoded = encodeURIComponent(fileName).replace(
-    /[!'()*]/g,
-    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
-  );
-  return `attachment; filename*=UTF-8''${encoded}; filename="${fileName}"`;
-};
+// Using shared header helper from utils.server
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   const url = new URL(request.url);

@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit";
 import ExcelJS from "exceljs";
+import type { ScheduleEntry } from "./types";
 import { addDays, set } from "date-fns";
 
 export const generatePDF = (title: string, data: any[]) => {
@@ -79,6 +80,18 @@ export const generatePDF = (title: string, data: any[]) => {
 };
 
 /**
+ * RFC 5987 compliant Content-Disposition filename encoding.
+ * Ensures filenames download correctly across Android/iOS/desktop.
+ */
+export const getContentDispositionHeader = (fileName: string) => {
+  const encoded = encodeURIComponent(fileName).replace(
+    /[!'()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
+  return `attachment; filename*=UTF-8''${encoded}; filename="${fileName}"`;
+};
+
+/**
  * Adds black borders to an Excel cell
  * @param cell - ExcelJS cell object
  */
@@ -108,6 +121,43 @@ export const addTitleToWorksheet = (
   titleCell.font = { name: "Arial", size: 14, bold: true };
   titleCell.alignment = { vertical: "middle", horizontal: "center" };
   worksheet.addRow([]); // Empty separator row
+};
+
+/**
+ * Generates an ExcelJS Workbook from an array of schedule entries.
+ * Shared utility to avoid duplication across API routes.
+ */
+export const generateWorkbookFromData = (
+  title: string,
+  year: number,
+  data: ScheduleEntry[]
+): ExcelJS.Workbook => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(title);
+
+  worksheet.columns = [
+    { key: "date", width: 15 },
+    { key: "location", width: 20 },
+    { key: "schedule", width: 40 },
+  ];
+
+  addTitleToWorksheet(worksheet, year, title);
+
+  data.forEach((item) => {
+    const row = worksheet.addRow({
+      date: item.dateFormatted,
+      location: item.location,
+      schedule: item.schedule,
+    });
+    row.eachCell((cell: ExcelJS.Cell) => addBordersToCell(cell));
+    if (item.isBold) {
+      row.getCell("date").font = { bold: true };
+      row.getCell("location").font = { bold: true };
+      row.getCell("schedule").font = { bold: true };
+    }
+  });
+
+  return workbook;
 };
 
 export const generateSchedulePointers = (
