@@ -43,6 +43,14 @@ export function ScheduleTable({
 
   return (
     <>
+      <div className="mb-3">
+        <p className=" text-[11px] font-black uppercase tracking-[0.2em]">
+          <span className="inline-flex items-center gap-2 bg-cyan-600/15 border border-cyan-500/40 text-cyan-100 px-3.5 py-2 rounded-xl ">
+            Se não vês a tabela toda, arrasta para o lado
+            <span className="text-cyan-300 animate-pulse">→</span>
+          </span>
+        </p>
+      </div>
       <div className="overflow-hidden bg-slate-950/20 border border-white/5 rounded-[32px] shadow-2xl">
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
           <table className="w-full text-left border-collapse min-w-150">

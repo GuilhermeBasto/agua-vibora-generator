@@ -23,7 +23,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="relative w-full max-w-6xl mx-auto min-h-screen flex flex-col">
-      <main className="grow pb-20 px-4 sm:px-0">
+      <main className="grow">
         <div className="bg-slate-900/80 sm:rounded-3xl shadow-2xl border border-slate-800 overflow-hidden backdrop-blur-xl">
           <PageHeader
             title={info.title}

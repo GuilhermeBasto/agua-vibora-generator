@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import stylesheet from "./tailwind.css?url";
 import { BackgroundGradient } from "./components/BackgroundGradient";
+import { InstallBanner } from "./components/InstallBanner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -31,6 +32,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#020617" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
         <Meta />
         <Links />
       </head>
@@ -46,8 +55,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <>
-      <div className="bg-slate-950 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="bg-slate-950 min-h-screen flex items-center justify-center  sm:pt-6 lg:pt-8">
         <BackgroundGradient />
+        <InstallBanner />
         <Outlet />
       </div>
     </>
