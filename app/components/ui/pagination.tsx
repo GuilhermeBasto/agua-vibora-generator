@@ -66,11 +66,11 @@ const PaginationPrevious = ({
   <PaginationLink
     aria-label="Go to previous page"
     size="default"
-    className={cn("gap-1 pl-2.5", className)}
+    className={cn("pl-2.5", className)}
     {...props}
   >
     <ChevronLeft className="h-4 w-4" />
-    <span>Anterior</span>
+    <span className="sr-only">Anterior</span>
   </PaginationLink>
 );
 PaginationPrevious.displayName = "PaginationPrevious";
@@ -82,11 +82,11 @@ const PaginationNext = ({
   <PaginationLink
     aria-label="Go to next page"
     size="default"
-    className={cn("gap-1 pr-2.5", className)}
+    className={cn("pr-2.5", className)}
     {...props}
   >
-    <span>Proximo</span>
     <ChevronRight className="h-4 w-4" />
+    <span className="sr-only">Proximo</span>
   </PaginationLink>
 );
 PaginationNext.displayName = "PaginationNext";
