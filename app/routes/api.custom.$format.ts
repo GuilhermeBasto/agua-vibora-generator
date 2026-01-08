@@ -1,13 +1,9 @@
 import type { Route } from "./+types/api.custom.$format";
 import type { GeneratedSchedule } from "~/lib/types";
-import {
-  generatePDF,
-  generateWorkbookFromData,
-  getContentDispositionHeader,
-  getResponseHeaders,
-} from "~/lib/utils.server";
 
 export async function action({ params, request }: Route.ActionArgs) {
+  const { generatePDF, generateWorkbookFromData, getResponseHeaders } =
+    await import("~/lib/utils.server");
   const format = params.format?.toLowerCase();
 
   if (request.method !== "POST") {

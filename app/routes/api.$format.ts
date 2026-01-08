@@ -4,10 +4,7 @@ import {
   generateScheduleWorkbook,
   generateScheduleCalendar,
 } from "~/lib/schedule.server";
-import {
-  getContentDispositionHeader,
-  getResponseHeaders,
-} from "~/lib/utils.server";
+import { getResponseHeaders } from "~/lib/utils.server";
 
 import {
   generatePoolSchedulePDF,
