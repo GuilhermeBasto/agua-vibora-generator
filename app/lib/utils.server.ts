@@ -352,7 +352,7 @@ export const buildScheduleData = (
 const getContentType = (type: "pdf" | "xlsx" | "ics"): string => {
   switch (type) {
     case "pdf":
-      return "application/octet-stream";
+      return "application/pdf";
     case "xlsx":
       return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     case "ics":
