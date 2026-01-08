@@ -4,7 +4,10 @@ import {
   generateScheduleWorkbook,
   generateScheduleCalendar,
 } from "~/lib/schedule.server";
-import { getContentDispositionHeader } from "~/lib/utils.server";
+import {
+  getContentDispositionHeader,
+  getResponseHeaders,
+} from "~/lib/utils.server";
 
 import {
   generatePoolSchedulePDF,
@@ -61,15 +64,10 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         });
 
         const fileName = getFileName(year, isTemplate, format, type);
+        const uint8Array = new Uint8Array(pdfBuffer);
 
-        return new Response(new Uint8Array(pdfBuffer), {
-          headers: {
-            "Content-Type": "application/pdf",
-            "Content-Disposition": getContentDispositionHeader(fileName),
-            "Cache-Control": "no-store, no-cache, must-revalidate",
-            "Content-Length": pdfBuffer.length.toString(),
-            "X-Content-Type-Options": "nosniff",
-          },
+        return new Response(uint8Array, {
+          headers: getResponseHeaders(fileName, "pdf", uint8Array.length),
         });
       }
 
@@ -84,14 +82,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         const uint8Array = new Uint8Array(buffer);
 
         return new Response(uint8Array, {
-          headers: {
-            "Content-Type":
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition": getContentDispositionHeader(fileName),
-            "Content-Length": uint8Array.length.toString(),
-            "X-Content-Type-Options": "nosniff",
-            "Cache-Control": "no-cache",
-          },
+          headers: getResponseHeaders(fileName, "xlsx", uint8Array.length),
         });
       }
 
@@ -109,11 +100,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           const fileName = getFileName(year, false, "ics", type);
 
           return new Response(result.value, {
-            headers: {
-              "Content-Type": "text/calendar; charset=utf-8",
-              "Content-Disposition": getContentDispositionHeader(fileName),
-              "Cache-Control": "no-store, no-cache, must-revalidate",
-            },
+            headers: getResponseHeaders(fileName, "ics", result.value.length),
           });
         }
       }

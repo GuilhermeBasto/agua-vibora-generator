@@ -348,3 +348,30 @@ export const buildScheduleData = (
 
   return scheduleData;
 };
+
+const getContentType = (type: "pdf" | "xlsx" | "ics"): string => {
+  switch (type) {
+    case "pdf":
+      return "application/pdf";
+    case "xlsx":
+      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    case "ics":
+      return "text/calendar; charset=utf-8";
+    default:
+      return "application/octet-stream";
+  }
+};
+
+export const getResponseHeaders = (
+  fileName: string,
+  type: "pdf" | "xlsx" | "ics",
+  length: number
+): HeadersInit => {
+  return {
+    "Content-Type": getContentType(type),
+    "Content-Disposition": getContentDispositionHeader(fileName),
+    "Content-Length": length.toString(),
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "no-cache",
+  };
+};

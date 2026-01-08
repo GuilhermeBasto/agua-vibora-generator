@@ -4,6 +4,7 @@ import {
   generatePDF,
   generateWorkbookFromData,
   getContentDispositionHeader,
+  getResponseHeaders,
 } from "~/lib/utils.server";
 
 export async function action({ params, request }: Route.ActionArgs) {
@@ -31,12 +32,6 @@ export async function action({ params, request }: Route.ActionArgs) {
       payload.name?.replace(/[/\\?%*:|"<>]/g, "-") || "agenda-personalizada";
     const fileBase = `${safeName}-${yearNum}`;
 
-    const commonHeaders = {
-      "Cache-Control": "no-store, no-cache, must-revalidate",
-      Pragma: "no-cache",
-      "X-Content-Type-Options": "nosniff",
-    };
-
     switch (format) {
       case "pdf": {
         const doc = generatePDF(
@@ -53,13 +48,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         });
 
         return new Response(new Uint8Array(buffer), {
-          headers: {
-            ...commonHeaders,
-            "Content-Type": "application/pdf",
-            "Content-Disposition": getContentDispositionHeader(
-              `${fileBase}.pdf`
-            ),
-          },
+          headers: getResponseHeaders(fileBase, "pdf", buffer.length),
         });
       }
 
@@ -75,14 +64,7 @@ export async function action({ params, request }: Route.ActionArgs) {
         const uint8 = new Uint8Array(xlsxBuffer);
 
         return new Response(uint8, {
-          headers: {
-            ...commonHeaders,
-            "Content-Type":
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition": getContentDispositionHeader(
-              `${fileBase}.xlsx`
-            ),
-          },
+          headers: getResponseHeaders(fileBase, "xlsx", uint8.length),
         });
       }
 
