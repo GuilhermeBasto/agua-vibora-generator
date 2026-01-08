@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { toast } from "sonner";
 import type { GeneratedSchedule } from "~/lib/types";
 
 interface UseDownloadOptions {
@@ -13,21 +14,20 @@ export function useDownload(
   apiUrl = "/api/custom"
 ) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [activeFormat, setActiveFormat] = useState<"pdf" | "xlsx" | null>(null);
+  const [activeFormat, setActiveFormat] = useState<
+    "pdf" | "xlsx" | "ics" | null
+  >(null);
 
-  // AbortController para cancelar o fetch se o componente for desmontado
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Limpeza ao desmontar
   useEffect(() => {
     return () => abortControllerRef.current?.abort();
   }, []);
 
   const download = useCallback(
-    async (format: "pdf" | "xlsx") => {
+    async (format: "pdf" | "xlsx" | "ics") => {
       if (!generatedSchedule) return;
 
-      // Cancelar downloads pendentes antes de iniciar um novo
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
 
@@ -63,6 +63,8 @@ export function useDownload(
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
 
+        toast.success("Download concluído com sucesso!");
+
         options?.onSuccess?.();
       } catch (error: any) {
         if (error.name === "AbortError") return; // Ignorar cancelamento propositado
@@ -70,6 +72,7 @@ export function useDownload(
         const err =
           error instanceof Error ? error : new Error("Erro desconhecido");
         options?.onError?.(err);
+        toast.error(`Erro ao efetuar o download: ${err.message}`);
       } finally {
         setIsDownloading(false);
         setActiveFormat(null);

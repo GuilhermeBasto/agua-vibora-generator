@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { Toaster } from "sonner";
 
 import type { Route } from "./+types/root";
 import stylesheet from "./tailwind.css?url";
@@ -60,6 +61,7 @@ export default function App() {
         <InstallBanner />
         <Outlet />
       </div>
+      <Toaster theme="dark" position="top-right" />
     </>
   );
 }

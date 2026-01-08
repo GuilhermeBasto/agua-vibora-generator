@@ -120,7 +120,7 @@ export function InstallBanner() {
           </div>
           <div className="space-y-1">
             <p className="text-sm font-semibold text-white">
-              Instalar aplicacao
+              Instalar aplicação
             </p>
             <p className="text-xs leading-relaxed text-slate-400">{subtitle}</p>
           </div>
@@ -146,7 +146,7 @@ export function InstallBanner() {
                 "text-slate-400 hover:text-slate-200"
               )}
             >
-              Agora nao
+              Agora não
             </button>
           </div>
         ) : (

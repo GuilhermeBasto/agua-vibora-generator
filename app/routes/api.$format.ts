@@ -67,6 +67,8 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             "Content-Type": "application/pdf",
             "Content-Disposition": getContentDispositionHeader(fileName),
             "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Content-Length": pdfBuffer.length.toString(),
+            "X-Content-Type-Options": "nosniff",
           },
         });
       }
@@ -79,12 +81,16 @@ export async function loader({ params, request }: Route.LoaderArgs) {
         const buffer = await workbook.xlsx.writeBuffer();
         const fileName = getFileName(year, isTemplate, format, type);
 
-        return new Response(new Uint8Array(buffer), {
+        const uint8Array = new Uint8Array(buffer);
+
+        return new Response(uint8Array, {
           headers: {
             "Content-Type":
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "Content-Disposition": getContentDispositionHeader(fileName),
-            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Content-Length": uint8Array.length.toString(),
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-cache",
           },
         });
       }

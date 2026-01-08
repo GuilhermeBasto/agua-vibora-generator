@@ -5,9 +5,9 @@ import type { GeneratedSchedule } from "~/lib/types";
 
 interface ResultViewProps {
   generatedSchedule: GeneratedSchedule;
-  download: (format: "pdf" | "xlsx") => Promise<void>;
+  download: (format: "pdf" | "xlsx" | "ics") => Promise<void>;
   isDownloading: boolean;
-  activeFormat: "pdf" | "xlsx" | null;
+  activeFormat: "pdf" | "xlsx" | "ics" | null;
   paginatedData: any[];
   totalPages: number;
   currentPage: number;

@@ -71,14 +71,19 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
                   reloadDocument
                   className="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 text-slate-300 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <Icon name="download" className="w-3.5 h-3.5" /> PDF
+                  <Icon name="download" className="w-3.5 h-3.5 text-cyan-400" />{" "}
+                  Exportar PDF
                 </Link>
                 <Link
                   to={`/api/xlsx?year=${year}&type=irrigation-pool`}
                   reloadDocument
                   className="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 text-slate-300 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <Icon name="download" className="w-3.5 h-3.5" /> EXCEL
+                  <Icon
+                    name="download"
+                    className="w-3.5 h-3.5 text-emerald-400"
+                  />{" "}
+                  Exportar Excel
                 </Link>
               </div>
             </div>
