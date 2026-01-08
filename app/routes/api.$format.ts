@@ -66,7 +66,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
           headers: {
             "Content-Type": "application/pdf",
             "Content-Disposition": getContentDispositionHeader(fileName),
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": "no-store, no-cache, must-revalidate",
           },
         });
       }
@@ -84,7 +84,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             "Content-Type":
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "Content-Disposition": getContentDispositionHeader(fileName),
-            "Cache-Control": "public, max-age=86400",
+            "Cache-Control": "no-store, no-cache, must-revalidate",
           },
         });
       }
@@ -106,7 +106,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
             headers: {
               "Content-Type": "text/calendar; charset=utf-8",
               "Content-Disposition": getContentDispositionHeader(fileName),
-              "Cache-Control": "public, max-age=86400",
+              "Cache-Control": "no-store, no-cache, must-revalidate",
             },
           });
         }

@@ -71,22 +71,32 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
                   reloadDocument
                   className="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 text-slate-300 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <Icon name="download" className="w-3.5 h-3.5" /> Exportar PDF
+                  <Icon name="download" className="w-3.5 h-3.5 text-cyan-400" />{" "}
+                  Exportar PDF
                 </Link>
                 <Link
                   to={`/api/xlsx?year=${year}`}
                   reloadDocument
                   className="flex items-center gap-2 bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 text-slate-300 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <Icon name="download" className="w-3.5 h-3.5" /> Exportar
-                  EXCEL
+                  <>
+                    <Icon
+                      name="download"
+                      className="w-3.5 h-3.5 text-emerald-400"
+                    />{" "}
+                    Exportar Excel
+                  </>
                 </Link>
                 <Link
                   to={`/api/ics?year=${year}`}
                   reloadDocument
-                  className="flex items-center gap-2 bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-violet-400 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                  className="flex items-center gap-2  bg-slate-800/40 hover:bg-violet-600/30 border border-white/5 text-slate-300 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
                 >
-                  <Icon name="calendar" className="w-3.5 h-3.5" /> Exportar ICS
+                  <Icon
+                    name="calendar"
+                    className="w-3.5 h-3.5 text-violet-400"
+                  />{" "}
+                  Exportar ICS
                 </Link>
               </div>
             </div>

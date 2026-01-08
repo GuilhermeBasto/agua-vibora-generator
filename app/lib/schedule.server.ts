@@ -266,7 +266,11 @@ const generateScheduleWorkbook = (
 const generateSchedulePDF = (year: number, template: boolean = false) => {
   const scheduleData = generateScheduleData(year, template);
 
-  return generatePDF(`Aviança da Água de Víbora - Ano ${year}`, scheduleData);
+  return generatePDF(`Aviança da Água de Víbora - Ano ${year}`, scheduleData, [
+    "Data",
+    "Casal",
+    "Horário",
+  ]);
 };
 
 /**

@@ -14,7 +14,7 @@ export function InstallBanner() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [mode, setMode] = useState<"prompt" | "ios" | null>(null);
+  const [mode, setMode] = useState<"prompt" | "ios" | "android" | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -30,6 +30,8 @@ export function InstallBanner() {
 
     const ua = window.navigator.userAgent.toLowerCase();
     const isiOS = /iphone|ipad|ipod/.test(ua);
+    const isAndroid = /android/.test(ua);
+    let promptTimeout: NodeJS.Timeout;
 
     if (isiOS) {
       setMode("ios");
@@ -39,6 +41,7 @@ export function InstallBanner() {
     const handleBeforeInstallPrompt = (event: Event) => {
       if (isiOS) return;
       event.preventDefault();
+      clearTimeout(promptTimeout);
       setDeferredPrompt(event as BeforeInstallPromptEvent);
       setMode("prompt");
       setIsVisible(true);
@@ -53,14 +56,25 @@ export function InstallBanner() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
 
+    // Fallback for Android devices where beforeinstallprompt doesn't fire
+    if (isAndroid && !isiOS) {
+      promptTimeout = setTimeout(() => {
+        if (!deferredPrompt) {
+          setMode("android");
+          setIsVisible(true);
+        }
+      }, 2000);
+    }
+
     return () => {
+      clearTimeout(promptTimeout);
       window.removeEventListener(
         "beforeinstallprompt",
         handleBeforeInstallPrompt
       );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -94,7 +108,7 @@ export function InstallBanner() {
 
   const subtitle =
     mode === "ios"
-      ? "No iOS, usa Partilhar > Adicionar ao Ecra Principal para guardar esta aplicacao."
+      ? "No iOS, usa Partilhar > Adicionar ao Ecra Principal para guardar esta aplicação."
       : "Guarda este site no ecra inicial para acesso rapido.";
 
   return (
@@ -145,7 +159,7 @@ export function InstallBanner() {
                 "text-slate-400 hover:text-slate-200"
               )}
             >
-              Entendi
+              {mode === "android" ? "Fechar" : "Entendi"}
             </button>
           </div>
         )}

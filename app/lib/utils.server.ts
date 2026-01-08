@@ -3,58 +3,140 @@ import ExcelJS from "exceljs";
 import type { ScheduleEntry } from "./types";
 import { addDays, set } from "date-fns";
 
-export const generatePDF = (title: string, data: any[]) => {
-  // PDF configuration (reduced top margin)
-  const doc = new PDFDocument({ margin: 30, size: "A4" });
+const pageWidth = 595; // A4 width in points
+const margin = 40;
+const pageHeight = 842; // A4 height in points
+const titleColor = "#1e293b"; // Dark slate text
+const headerBgColor = "#f0f9ff"; // Light cyan background
+const headerTextColor = "#0369a1"; // Darker cyan text
 
-  // Title (smaller and tighter spacing)
-  doc.fontSize(12).font("Helvetica-Bold").text(title, {
+const addPDFPageNumber = (doc: PDFKit.PDFDocument, pageNumber: number) => {
+  doc
+    .font("Helvetica-Bold")
+    .fontSize(8)
+    .fillColor(titleColor)
+    .text(
+      String(pageNumber),
+      pageWidth - margin - 50,
+      pageHeight - margin - 10,
+      {
+        width: 40,
+        align: "right",
+      }
+    );
+};
+
+export const generatePDF = (
+  title: string,
+  data: ScheduleEntry[],
+  headers = ["Data", "Casal", "Regantes"]
+) => {
+  // PDF configuration with modern styling
+  const doc = new PDFDocument({ margin: 40, size: "A4" });
+
+  // Professional header with title
+  doc.fontSize(18).font("Helvetica-Bold").fillColor(titleColor).text(title, {
     align: "center",
   });
   doc.moveDown(0.5);
 
-  // Table configuration
-  const startX = 30;
-  const pageWidth = 595; // A4 width in points
-  const margin = 30;
+  const startX = margin;
   const totalWidth = pageWidth - 2 * margin;
   const colWidths = {
-    date: 120,
-    location: 150,
-    schedule: totalWidth - 120 - 150,
+    date: 100,
+    location: 140,
+    schedule: totalWidth - 100 - 140,
   };
-  const rowHeight = 20;
+  const rowHeight = 24;
+  const headerHeight = 28;
 
   let currentY = doc.y;
+  let pageNumber = 1;
 
-  // Draw data rows
-  data.forEach((item) => {
-    // Check if we need a new page (adjusted for smaller bottom margin)
-    if (currentY > 780) {
+  // Draw header row with professional styling
+  const headerY = currentY;
+
+  // Header background
+  doc
+    .rect(startX, headerY, totalWidth, headerHeight)
+    .fillAndStroke(headerBgColor, headerTextColor)
+    .lineWidth(1);
+
+  // Header text
+  doc.font("Helvetica-Bold").fontSize(10).fillColor(headerTextColor);
+
+  let xPos = startX;
+  headers.forEach((header, idx) => {
+    const colWidth =
+      idx === 0
+        ? colWidths.date
+        : idx === 1
+          ? colWidths.location
+          : colWidths.schedule;
+    doc.text(header, xPos + 8, headerY + 8, {
+      width: colWidth - 16,
+      align: "left",
+    });
+    xPos += colWidth;
+  });
+
+  currentY += headerHeight;
+
+  // Draw data rows with alternating background
+  data.forEach((item, rowIndex) => {
+    // Check if we need a new page
+    if (currentY > 750) {
+      addPDFPageNumber(doc, pageNumber);
       doc.addPage();
-      currentY = 30;
+      pageNumber++;
+      currentY = margin + 20;
     }
 
-    // Set font based on bold flag
-    doc.font(item.isBold ? "Helvetica-Bold" : "Helvetica").fontSize(10);
+    // Alternating row background color
+    const bgColor = rowIndex % 2 === 0 ? "#ffffff" : "#f8fafc";
+    const isBoldRow = item.isBold;
+    const effectiveBgColor = isBoldRow ? "#e0f2fe" : bgColor; // Light cyan for bold rows
+
+    // Row background
+    doc.rect(startX, currentY, totalWidth, rowHeight).fill(effectiveBgColor);
+    doc.strokeColor(headerTextColor).lineWidth(1);
+
+    // Set text color and font based on bold flag
+    const textColor = isBoldRow ? "#0c4a6e" : "#334155"; // Darker for bold rows
+    doc
+      .font(isBoldRow ? "Helvetica-Bold" : "Helvetica")
+      .fontSize(9)
+      .fillColor(textColor);
 
     // Date column
-    doc.rect(startX, currentY, colWidths.date, rowHeight).stroke();
-    doc.text(item.dateFormatted, startX + 5, currentY + 5, {
-      width: colWidths.date - 10,
+    doc.text(item.dateFormatted, startX + 8, currentY + 7, {
+      width: colWidths.date - 16,
       align: "left",
     });
 
     // Location column
-    doc
-      .rect(startX + colWidths.date, currentY, colWidths.location, rowHeight)
-      .stroke();
-    doc.text(item.location, startX + colWidths.date + 5, currentY + 5, {
-      width: colWidths.location - 10,
+    doc.text(item.location, startX + colWidths.date + 8, currentY + 7, {
+      width: colWidths.location - 16,
       align: "left",
     });
 
-    // Schedule column
+    // Schedule column with monospace-like appearance
+    doc.text(
+      item.schedule || "",
+      startX + colWidths.date + colWidths.location + 8,
+      currentY + 7,
+      {
+        width: colWidths.schedule - 16,
+        align: "left",
+      }
+    );
+
+    // Draw cell borders
+    doc.strokeColor(headerTextColor).lineWidth(1);
+    doc.rect(startX, currentY, colWidths.date, rowHeight).stroke();
+    doc
+      .rect(startX + colWidths.date, currentY, colWidths.location, rowHeight)
+      .stroke();
     doc
       .rect(
         startX + colWidths.date + colWidths.location,
@@ -63,19 +145,11 @@ export const generatePDF = (title: string, data: any[]) => {
         rowHeight
       )
       .stroke();
-    doc.text(
-      item.schedule,
-      startX + colWidths.date + colWidths.location + 5,
-      currentY + 5,
-      {
-        width: colWidths.schedule - 10,
-        align: "left",
-      }
-    );
 
     currentY += rowHeight;
   });
 
+  addPDFPageNumber(doc, pageNumber);
   return doc;
 };
 
