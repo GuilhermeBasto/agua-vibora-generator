@@ -125,25 +125,25 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
                                     </div>
 
                                     {/* Template Export */}
-                                    <div className="space-y-2 pt-2 border-t border-white/5 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
-                                        <div className="flex items-center gap-2 ml-1 text-slate-400">
+                                    <div className="space-y-2 border-t border-white/5 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                                        <div className="ml-1 flex items-center gap-2 text-slate-400">
                                             <Icon
-                                                name="template"
-                                                className="w-3 h-3"
+                                                name="file"
+                                                className="h-3 w-3"
                                             />
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                                                Exportar Calendário Vazio
+                                                Calendário Vazio
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             <Link
                                                 to={`/api/pdf?year=${year}&template=true`}
                                                 reloadDocument
-                                                className="flex items-center gap-3 sm:gap-2 bg-slate-800/40 hover:bg-slate-800/60 border border-white/5 text-slate-300 px-6 py-3.5 sm:px-4 sm:py-2.5 rounded-xl text-xs sm:text-[10px] font-bold uppercase tracking-widest transition-all"
+                                                className="flex items-center gap-3 border border-white/5 bg-slate-800/40 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-slate-300 transition-all hover:bg-slate-800/60 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-[10px] rounded-xl"
                                             >
                                                 <Icon
-                                                    name="template"
-                                                    className="w-3.5 h-3.5 sm:w-3 sm:h-3"
+                                                    name="file"
+                                                    className="h-4 w-4 sm:h-3 sm:w-3"
                                                 />
                                                 PDF
                                             </Link>
