@@ -382,6 +382,8 @@ const parseTimeRange = (
 
 /**
  * Generates an iCalendar (.ics) file for Google Calendar integration
+ * Special rule: When schedule goes "até à meia noite", the event starts on the PREVIOUS day at sunset
+ * Example: If row shows "25 de julho - até à meia noite", event starts on July 24 at sunset
  * @param year - The target year
  * @returns ICS file content as string or error
  */
@@ -396,13 +398,34 @@ const generateScheduleCalendar = (
             // Parse the time range from the schedule string
             const timeRange = parseTimeRange(item.schedule)
 
+            // Special rule: If schedule goes until midnight (meia noite / 24h / 00h),
+            // the event actually starts on the PREVIOUS day at sunset
+            const scheduleText = item.schedule.toLowerCase()
+            const isMidnightEnd =
+                scheduleText.includes('meia noite') ||
+                scheduleText.includes('meia-noite') ||
+                scheduleText.includes('24h') ||
+                scheduleText.includes('00h') ||
+                (timeRange.end &&
+                    (timeRange.end.hour === 0 || timeRange.end.hour === 24))
+
+            // Use the previous day if event goes until midnight
+            const eventDate = isMidnightEnd
+                ? new Date(item.date.getTime() - 24 * 60 * 60 * 1000) // Subtract 1 day
+                : item.date
+
+            // If event goes until midnight, start at sunset (~20:30)
+            // Otherwise use the parsed start time
+            const startHour = isMidnightEnd ? 20 : timeRange.start.hour
+            const startMinute = isMidnightEnd ? 30 : timeRange.start.minute
+
             return {
                 start: [
-                    item.date.getFullYear(),
-                    item.date.getMonth() + 1,
-                    item.date.getDate(),
-                    timeRange.start.hour,
-                    timeRange.start.minute,
+                    eventDate.getFullYear(),
+                    eventDate.getMonth() + 1,
+                    eventDate.getDate(),
+                    startHour,
+                    startMinute,
                 ],
                 duration: {
                     hours: timeRange.durationHours,
