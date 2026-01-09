@@ -1,89 +1,91 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import { toast } from "sonner";
-import type { GeneratedSchedule } from "~/lib/types";
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { toast } from 'sonner'
+import type { GeneratedSchedule } from '~/lib/types'
 
 interface UseDownloadOptions {
-  onError?: (error: Error) => void;
-  onSuccess?: () => void;
-  fileNamePrefix?: string;
+    onError?: (error: Error) => void
+    onSuccess?: () => void
+    fileNamePrefix?: string
 }
 
 export function useDownload(
-  generatedSchedule: GeneratedSchedule | null,
-  options?: UseDownloadOptions,
-  apiUrl = "/api/custom"
+    generatedSchedule: GeneratedSchedule | null,
+    options?: UseDownloadOptions,
+    apiUrl = '/api/custom'
 ) {
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [activeFormat, setActiveFormat] = useState<
-    "pdf" | "xlsx" | "ics" | null
-  >(null);
+    const [isDownloading, setIsDownloading] = useState(false)
+    const [activeFormat, setActiveFormat] = useState<
+        'pdf' | 'xlsx' | 'ics' | null
+    >(null)
 
-  const abortControllerRef = useRef<AbortController | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null)
 
-  useEffect(() => {
-    return () => abortControllerRef.current?.abort();
-  }, []);
+    useEffect(() => {
+        return () => abortControllerRef.current?.abort()
+    }, [])
 
-  const download = useCallback(
-    async (format: "pdf" | "xlsx" | "ics") => {
-      if (!generatedSchedule) return;
+    const download = useCallback(
+        async (format: 'pdf' | 'xlsx' | 'ics') => {
+            if (!generatedSchedule) return
 
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
+            abortControllerRef.current?.abort()
+            abortControllerRef.current = new AbortController()
 
-      setActiveFormat(format);
-      setIsDownloading(true);
+            setActiveFormat(format)
+            setIsDownloading(true)
 
-      try {
-        const fd = new FormData();
-        fd.append("data", JSON.stringify(generatedSchedule));
+            try {
+                const fd = new FormData()
+                fd.append('data', JSON.stringify(generatedSchedule))
 
-        const res = await fetch(`${apiUrl}/${format}`, {
-          method: "POST",
-          body: fd,
-          signal: abortControllerRef.current.signal,
-        });
+                const res = await fetch(`${apiUrl}/${format}`, {
+                    method: 'POST',
+                    body: fd,
+                    signal: abortControllerRef.current.signal,
+                })
 
-        if (!res.ok) throw new Error(`Erro no servidor: ${res.status}`);
+                if (!res.ok) throw new Error(`Erro no servidor: ${res.status}`)
 
-        const blob = await res.blob();
+                const blob = await res.blob()
 
-        // Criar o download de forma segura
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
+                // Criar o download de forma segura
+                const url = window.URL.createObjectURL(blob)
+                const link = document.createElement('a')
 
-        const fileName = `${options?.fileNamePrefix || generatedSchedule.name || "agenda"}-${generatedSchedule.year}.${format}`;
+                const fileName = `${options?.fileNamePrefix || generatedSchedule.name || 'agenda'}-${generatedSchedule.year}.${format}`
 
-        link.href = url;
-        link.setAttribute("download", fileName);
-        document.body.appendChild(link);
-        link.click();
+                link.href = url
+                link.setAttribute('download', fileName)
+                document.body.appendChild(link)
+                link.click()
 
-        // Cleanup imediato
-        link.parentNode?.removeChild(link);
-        window.URL.revokeObjectURL(url);
+                link.parentNode?.removeChild(link)
+                window.URL.revokeObjectURL(url)
 
-        toast.success("Download concluído com sucesso!");
+                toast.success('Download concluído com sucesso!')
 
-        options?.onSuccess?.();
-      } catch (error: any) {
-        if (error.name === "AbortError") return; // Ignorar cancelamento propositado
+                options?.onSuccess?.()
+            } catch (error: unknown) {
+                if (error instanceof Error && error.name === 'AbortError')
+                    return
 
-        const err =
-          error instanceof Error ? error : new Error("Erro desconhecido");
-        options?.onError?.(err);
-        toast.error(`Erro ao efetuar o download: ${err.message}`);
-      } finally {
-        setIsDownloading(false);
-        setActiveFormat(null);
-      }
-    },
-    [generatedSchedule, apiUrl, options]
-  );
+                const err =
+                    error instanceof Error
+                        ? error
+                        : new Error('Erro desconhecido')
+                options?.onError?.(err)
+                toast.error(`Erro ao efetuar o download: ${err.message}`)
+            } finally {
+                setIsDownloading(false)
+                setActiveFormat(null)
+            }
+        },
+        [generatedSchedule, apiUrl, options]
+    )
 
-  return {
-    download,
-    isDownloading,
-    activeFormat,
-  };
+    return {
+        download,
+        isDownloading,
+        activeFormat,
+    }
 }

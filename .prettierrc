@@ -1,10 +1,20 @@
 {
-  "semi": true,
   "trailingComma": "es5",
-  "singleQuote": false,
-  "printWidth": 80,
-  "tabWidth": 2,
-  "useTabs": false,
-  "arrowParens": "always",
-  "endOfLine": "lf"
+  "tabWidth": 4,
+  "semi": false,
+  "singleQuote": true,
+  "plugins": [
+    "prettier-plugin-tailwindcss",
+    "@trivago/prettier-plugin-sort-imports"
+  ],
+  "importOrder": [
+    "<THIRD_PARTY_MODULES>",
+    "^~/features/(.*)$",
+    "^~/components/(.*)$",
+    "^~/utils/(.*)$",
+    "^~/api/(.*)$",
+    "^~/generated/(.*)$",
+    "^~/typescript/(.*)$",
+    "^[./]"
+  ]
 }

@@ -7,10 +7,10 @@ Uma aplicação web moderna para criar e gerir calendarios de rega para o sistem
 - **Interface Interativa**: Formulário intuitivo para criação de calendarios personalizados
 - **Suporte Multi-Aldeia**: Gerencia calendarios para 11 aldeias diferentes em duas regiões
 - **Múltiplos Formatos de Exportação**:
-  - PDF
-  - Excel (.xlsx)
-  - CSV
-  - iCalendar (.ics) para integração com Google Calendar
+    - PDF
+    - Excel (.xlsx)
+    - CSV
+    - iCalendar (.ics) para integração com Google Calendar
 - **Seletor de Ano**: Ajusta automaticamente os calendarios com base em anos pares/ímpares
 - **Geração de Templates**: Cria templates em branco para agendamento manual
 - **Design Responsivo**: Interface otimizada para desktop e mobile
@@ -138,12 +138,12 @@ POST /api/create-schedule
 
 ```json
 {
-  "name": "Cronograma 2026",
-  "year": "2026",
-  "schedules": {
-    "Torre": ["1h30 da tarde", "12h até as 2h da tarde"],
-    "Passo": ["10 da noite até ás 1h30/5h30 da tarde"]
-  }
+    "name": "Cronograma 2026",
+    "year": "2026",
+    "schedules": {
+        "Torre": ["1h30 da tarde", "12h até as 2h da tarde"],
+        "Passo": ["10 da noite até ás 1h30/5h30 da tarde"]
+    }
 }
 ```
 
@@ -151,11 +151,11 @@ POST /api/create-schedule
 
 ```json
 {
-  "data": [
-    /* dados do cronograma gerado */
-  ],
-  "name": "Cronograma 2026",
-  "year": "2026"
+    "data": [
+        /* dados do cronograma gerado */
+    ],
+    "name": "Cronograma 2026",
+    "year": "2026"
 }
 ```
 
@@ -191,12 +191,12 @@ O cronograma de rega segue estas regras:
 ## Utilitários Compartilhados (server)
 
 - **[app/lib/utils.server.ts](app/lib/utils.server.ts)** fornece utilitários comuns usados pelos geradores:
-  - `getOrder(list, year, referenceYear)`: calcula a rotação anual de uma lista.
-  - `getYearScheduleDurations(year, schedule)`: seleciona configuração de horários para anos pares/ímpares.
-  - `getDateRange(year, startCfg, endCfg)`: cria datas de início/fim da temporada.
-  - `generateSchedulePointers(config)`: inicializa ponteiros por local para ciclagem de rótulos.
-  - `buildScheduleData(...)`: constrói entradas diárias reutilizando a lógica de rotação e formatação.
-  - `generatePDF(title, data)`: renderiza PDF com layout compacto (margens e espaçamento otimizados).
+    - `getOrder(list, year, referenceYear)`: calcula a rotação anual de uma lista.
+    - `getYearScheduleDurations(year, schedule)`: seleciona configuração de horários para anos pares/ímpares.
+    - `getDateRange(year, startCfg, endCfg)`: cria datas de início/fim da temporada.
+    - `generateSchedulePointers(config)`: inicializa ponteiros por local para ciclagem de rótulos.
+    - `buildScheduleData(...)`: constrói entradas diárias reutilizando a lógica de rotação e formatação.
+    - `generatePDF(title, data)`: renderiza PDF com layout compacto (margens e espaçamento otimizados).
 
 Ambos os ficheiros de servidor já usam estes helpers:
 
@@ -206,9 +206,9 @@ Ambos os ficheiros de servidor já usam estes helpers:
 ## Hook de Paginação (client)
 
 - **[app/hooks/usePagination.ts](app/hooks/usePagination.ts)** encapsula paginação de listas:
-  - Entrada: `data`, `currentPage`, `itemsPerPage` (padrão 20)
-  - Saída: `paginatedData`, `totalPages`, `pageNumbers`
-  - Uso exemplo: ver [app/routes/create-custom-schedule.tsx](app/routes/create-custom-schedule.tsx)
+    - Entrada: `data`, `currentPage`, `itemsPerPage` (padrão 20)
+    - Saída: `paginatedData`, `totalPages`, `pageNumbers`
+    - Uso exemplo: ver [app/routes/create-custom-schedule.tsx](app/routes/create-custom-schedule.tsx)
 
 ## Ajustes de UI
 
@@ -233,9 +233,9 @@ Ambos os ficheiros de servidor já usam estes helpers:
 - **Build Tool**: Vite
 - **Componentes UI**: Componentes customizados com padrões shadcn/ui
 - **Exportação de Dados**:
-  - PDFKit para geração de PDF
-  - ExcelJS para geração de Excel
-  - ICS para iCalendar
+    - PDFKit para geração de PDF
+    - ExcelJS para geração de Excel
+    - ICS para iCalendar
 
 ## Deployment
 

@@ -1,27 +1,27 @@
 {
-  "short_name": "Agua Víbora",
-  "name": "Calendário da Água Víbora - Abadim",
-  "icons": [
-    {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    }
-  ],
-  "start_url": "/",
-  "background_color": "#020617",
-  "display": "standalone",
-  "scope": "/",
-  "theme_color": "#06b6d4",
-  "description": "Sistema de gestão de rega secular de Abadim."
+    "short_name": "Agua Víbora",
+    "name": "Calendário da Água Víbora - Abadim",
+    "icons": [
+        {
+            "src": "favicon.ico",
+            "sizes": "64x64 32x32 24x24 16x16",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "icon-192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "icon-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "background_color": "#020617",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#06b6d4",
+    "description": "Sistema de gestão de rega secular de Abadim."
 }
