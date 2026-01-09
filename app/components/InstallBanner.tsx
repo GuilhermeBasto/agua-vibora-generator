@@ -32,6 +32,7 @@ export function InstallBanner() {
         const isiOS = /iphone|ipad|ipod/.test(ua)
         const isAndroid = /android/.test(ua)
         let promptTimeout: NodeJS.Timeout
+        let hasReceivedPrompt = false
 
         if (isiOS) {
             setMode('ios')
@@ -42,6 +43,7 @@ export function InstallBanner() {
             if (isiOS) return
             event.preventDefault()
             clearTimeout(promptTimeout)
+            hasReceivedPrompt = true
             setDeferredPrompt(event as BeforeInstallPromptEvent)
             setMode('prompt')
             setIsVisible(true)
@@ -62,7 +64,7 @@ export function InstallBanner() {
         // Fallback for Android devices where beforeinstallprompt doesn't fire
         if (isAndroid && !isiOS) {
             promptTimeout = setTimeout(() => {
-                if (!deferredPrompt) {
+                if (!hasReceivedPrompt) {
                     setMode('android')
                     setIsVisible(true)
                 }
@@ -77,7 +79,7 @@ export function InstallBanner() {
             )
             window.removeEventListener('appinstalled', handleAppInstalled)
         }
-    }, [deferredPrompt])
+    }, [])
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return
@@ -111,21 +113,35 @@ export function InstallBanner() {
 
     const subtitle =
         mode === 'ios'
-            ? 'No iOS, usa Partilhar > Adicionar ao Ecra Principal para guardar esta aplicação.'
-            : 'Guarda este site no ecra inicial para acesso rapido.'
+            ? 'No iOS, usa Partilhar > Adicionar ao Ecrã Principal para guardar esta aplicação.'
+            : 'Guarda este site no ecrã inicial para acesso rápido.'
 
     return (
-        <div className="fixed inset-x-4 bottom-6 z-50 sm:inset-x-auto sm:left-auto sm:right-6 sm:max-w-sm">
+        <div
+            className="fixed inset-x-4 bottom-6 z-50 sm:inset-x-auto sm:left-auto sm:right-6 sm:max-w-sm"
+            role="dialog"
+            aria-labelledby="install-banner-title"
+            aria-describedby="install-banner-description"
+        >
             <div className="flex flex-col gap-4 rounded-2xl border border-cyan-500/30 bg-slate-950/90 p-4 shadow-xl shadow-cyan-500/20 backdrop-blur-2xl sm:p-5">
                 <div className="flex items-start gap-3">
-                    <div className="rounded-full bg-cyan-500/10 p-2 text-cyan-400">
+                    <div
+                        className="rounded-full bg-cyan-500/10 p-2 text-cyan-400"
+                        aria-hidden="true"
+                    >
                         <Icon name="download" className="h-4 w-4" />
                     </div>
                     <div className="space-y-1">
-                        <p className="text-sm font-semibold text-white">
+                        <p
+                            id="install-banner-title"
+                            className="text-sm font-semibold text-white"
+                        >
                             Instalar aplicação
                         </p>
-                        <p className="text-xs leading-relaxed text-slate-400">
+                        <p
+                            id="install-banner-description"
+                            className="text-xs leading-relaxed text-slate-400"
+                        >
                             {subtitle}
                         </p>
                     </div>
@@ -138,8 +154,9 @@ export function InstallBanner() {
                             onClick={handleInstallClick}
                             className={cn(
                                 buttonVariants({ size: 'sm' }),
-                                'bg-cyan-500 text-slate-950 font-semibold shadow-lg shadow-cyan-500/30 hover:bg-cyan-400'
+                                'bg-cyan-500 font-semibold text-slate-950 shadow-lg shadow-cyan-500/30 hover:bg-cyan-400'
                             )}
+                            aria-label="Instalar aplicação agora"
                         >
                             Instalar agora
                         </button>
@@ -153,6 +170,7 @@ export function InstallBanner() {
                                 }),
                                 'text-slate-400 hover:text-slate-200'
                             )}
+                            aria-label="Dispensar instalação"
                         >
                             Agora não
                         </button>
@@ -169,6 +187,11 @@ export function InstallBanner() {
                                 }),
                                 'text-slate-400 hover:text-slate-200'
                             )}
+                            aria-label={
+                                mode === 'android'
+                                    ? 'Fechar aviso'
+                                    : 'Fechar instruções'
+                            }
                         >
                             {mode === 'android' ? 'Fechar' : 'Entendi'}
                         </button>

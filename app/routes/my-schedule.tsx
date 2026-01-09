@@ -132,7 +132,7 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
                                                 className="w-3 h-3"
                                             />
                                             <span className="text-[10px] font-black uppercase tracking-[0.2em]">
-                                                Template Vazio
+                                                Exportar Calendário Vazio
                                             </span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
@@ -145,7 +145,7 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
                                                     name="template"
                                                     className="w-3.5 h-3.5 sm:w-3 sm:h-3"
                                                 />
-                                                PDF Vazio
+                                                PDF
                                             </Link>
                                         </div>
                                     </div>
