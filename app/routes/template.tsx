@@ -1,4 +1,5 @@
 import { useSearchParams, useNavigation, Link } from 'react-router'
+import { useCloseKeyboardOnNavigation } from '~/hooks/useCloseKeyboardOnNavigation'
 import { DownloadSection } from '~/components/DownloadSection'
 import { Footer } from '~/components/Footer'
 import { Icon } from '~/components/Icon'
@@ -34,6 +35,9 @@ export default function Index({ loaderData }: Route.ComponentProps) {
     const { year } = loaderData
 
     const isLoading = navigation.state === 'loading'
+
+    // Close keyboard when navigation starts
+    useCloseKeyboardOnNavigation()
 
     const handleYearChange = (newYear: number) => {
         setSearchParams({ year: String(newYear) })

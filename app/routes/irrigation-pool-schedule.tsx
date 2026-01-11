@@ -1,4 +1,5 @@
 import { useNavigate, useNavigation, Link } from 'react-router'
+import { useCloseKeyboardOnNavigation } from '~/hooks/useCloseKeyboardOnNavigation'
 import { generatePoolScheduleData } from '~/lib/poolSchedule.server'
 import { getPageNumbers } from '~/lib/utils'
 import { Footer } from '~/components/Footer'
@@ -53,6 +54,9 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
     const navigation = useNavigation()
 
     const isLoading = navigation.state === 'loading'
+
+    // Close keyboard when navigation starts
+    useCloseKeyboardOnNavigation()
 
     const handleYearChange = (newYear: number) => {
         navigate(`/irrigation-pool-schedule?year=${newYear}&page=1`)
