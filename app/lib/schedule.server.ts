@@ -432,11 +432,22 @@ const generateScheduleCalendar = (
                     minutes: timeRange.durationMinutes,
                 },
                 title: `Água do casal: ${item.location}`,
-                description: `Horário: ${item.schedule}`,
+                description: `Horário: ${item.schedule}\nLocal: ${item.location}`,
+                location: item.location,
                 status: 'CONFIRMED' as const,
                 busyStatus: 'BUSY' as const,
-                organizer: { name: 'Água de Víbora' },
+                organizer: {
+                    name: 'Água de Víbora',
+                    email: 'noreply@agua-vibora.pt',
+                },
                 categories: ['Água de víbora', item.location],
+                alarms: [
+                    {
+                        action: 'display' as const,
+                        trigger: { hours: 2, before: true },
+                        description: 'Água do casal daqui a 2 horas',
+                    },
+                ],
             }
         })
 
@@ -450,7 +461,10 @@ const generateScheduleCalendar = (
         return { error: new Error('Failed to generate calendar') }
     }
 
-    return { value: result.value }
+    // Ensure proper line endings for better compatibility
+    const icsContent = result.value.replace(/\r?\n/g, '\r\n')
+
+    return { value: icsContent }
 }
 
 export {

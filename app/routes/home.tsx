@@ -4,6 +4,29 @@ import { Icon } from '~/components/Icon'
 import { PageHeader } from '~/components/PageHeader'
 import type { Route } from './+types/home'
 
+export function meta() {
+    return [
+        { title: 'Água de Víbora - Gestão de Águas Comunitárias' },
+        {
+            name: 'description',
+            content:
+                'Sistema secular de gestão de água em Abadim, Cabeceiras de Basto. Consulte horários de rega, crie calendários personalizados e exporte para PDF, Excel ou Google Calendar.',
+        },
+        {
+            name: 'keywords',
+            content:
+                'água víbora, cabeceiras de basto, abadim, horário rega, levada, gestão água',
+        },
+        { property: 'og:title', content: 'Água de Víbora' },
+        {
+            property: 'og:description',
+            content:
+                'Sistema de gestão de águas comunitárias em Abadim, Cabeceiras de Basto',
+        },
+        { property: 'og:type', content: 'website' },
+    ]
+}
+
 export async function loader() {
     return {
         info: {
@@ -73,14 +96,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                                 description="Acesso ao calendário específico da Poça do Coblinho e seus regantes."
                                 actionLabel="Ver Calendário"
                             />
-                            {/* 
-              <Card
-                color="purple"
-                linkTo="/template"
-                title="Calendário Geral"
-                description="Consulta o calendário padrão da Víbora para todos os casais."
-                actionLabel="Ver Tudo"
-              /> */}
 
                             <Card
                                 color="amber"

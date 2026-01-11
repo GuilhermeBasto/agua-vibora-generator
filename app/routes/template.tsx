@@ -1,11 +1,23 @@
-import { useSearchParams, Link } from 'react-router'
+import { useSearchParams, useNavigation, Link } from 'react-router'
 import { DownloadSection } from '~/components/DownloadSection'
 import { Footer } from '~/components/Footer'
 import { Icon } from '~/components/Icon'
 import { InfoCard } from '~/components/InfoCard'
+import { LoadingOverlay } from '~/components/LoadingOverlay'
 import { PageHeader } from '~/components/PageHeader'
 import { YearSelector } from '~/components/YearSelector'
 import type { Route } from './+types/my-schedule'
+
+export function meta({ loaderData }: Route.MetaArgs) {
+    const year = loaderData?.year || new Date().getFullYear()
+    return [
+        { title: `Templates e Downloads - Água de Víbora ${year}` },
+        {
+            name: 'description',
+            content: `Baixe templates e calendários da água de Víbora para ${year}. Formatos disponíveis: PDF, Excel e Google Calendar (ICS).`,
+        },
+    ]
+}
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
@@ -18,7 +30,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Index({ loaderData }: Route.ComponentProps) {
     const [, setSearchParams] = useSearchParams()
+    const navigation = useNavigation()
     const { year } = loaderData
+
+    const isLoading = navigation.state === 'loading'
 
     const handleYearChange = (newYear: number) => {
         setSearchParams({ year: String(newYear) })
@@ -26,6 +41,8 @@ export default function Index({ loaderData }: Route.ComponentProps) {
 
     return (
         <div className="relative w-full max-w-6xl mx-auto">
+            <LoadingOverlay isLoading={isLoading} />
+
             <div className="bg-slate-900/80 rounded-2xl shadow-2xl border border-slate-800 overflow-hidden backdrop-blur-xl">
                 <PageHeader
                     title={'Calendário Geral de Rega'}

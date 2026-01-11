@@ -373,11 +373,19 @@ export const getResponseHeaders = (
     type: 'pdf' | 'xlsx' | 'ics',
     length: number
 ): HeadersInit => {
-    return {
+    const headers: HeadersInit = {
         'Content-Type': getContentType(type),
         'Content-Disposition': getContentDispositionHeader(fileName),
         'Content-Length': length.toString(),
         'X-Content-Type-Options': 'nosniff',
         'Cache-Control': 'no-cache',
     }
+
+    // Add extra headers for ICS files to improve Android compatibility
+    if (type === 'ics') {
+        headers['Content-Transfer-Encoding'] = 'binary'
+        headers['Accept-Ranges'] = 'bytes'
+    }
+
+    return headers
 }

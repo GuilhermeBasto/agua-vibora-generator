@@ -1,12 +1,28 @@
-import { useNavigate, Link } from 'react-router'
+import { useNavigate, useNavigation, Link } from 'react-router'
 import { generateScheduleData } from '~/lib/schedule.server'
 import { getPageNumbers } from '~/lib/utils'
 import { Footer } from '~/components/Footer'
 import { Icon } from '~/components/Icon'
+import { LoadingOverlay } from '~/components/LoadingOverlay'
 import { PageHeader } from '~/components/PageHeader'
 import { ScheduleTable } from '~/components/ScheduleTable'
 import { YearSelector } from '~/components/YearSelector'
 import type { Route } from './+types/my-schedule'
+
+export function meta({ loaderData }: Route.MetaArgs) {
+    const year = loaderData?.year || new Date().getFullYear()
+    return [
+        { title: `Aviança Água de Víbora ${year}` },
+        {
+            name: 'description',
+            content: `Consulte o horário de rega anual da água de Víbora para ${year}. Exporte para PDF, Excel ou adicione ao Google Calendar.`,
+        },
+        {
+            name: 'keywords',
+            content: `água víbora ${year}, horário rega, calendário rega, abadim`,
+        },
+    ]
+}
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url)
@@ -34,6 +50,9 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
     const { year, page, totalPages, schedule } = loaderData
     const pageNumbers = getPageNumbers(page, totalPages)
     const navigate = useNavigate()
+    const navigation = useNavigation()
+
+    const isLoading = navigation.state === 'loading'
 
     const handleYearChange = (newYear: number) => {
         navigate(`/my-schedule?year=${newYear}&page=1`)
@@ -41,6 +60,8 @@ export default function MySchedulePage({ loaderData }: Route.ComponentProps) {
 
     return (
         <div className="relative w-full max-w-6xl mx-auto min-h-screen flex flex-col">
+            <LoadingOverlay isLoading={isLoading} />
+
             <main className="grow pb-20">
                 <div className="bg-slate-900/40 sm:rounded-[40px] shadow-2xl border-x sm:border border-white/5 overflow-hidden backdrop-blur-2xl">
                     <PageHeader

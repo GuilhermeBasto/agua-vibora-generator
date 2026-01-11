@@ -6,6 +6,17 @@ import { Footer } from '~/components/Footer'
 import InfoBlock from '~/components/InfoBlock'
 import { PageHeader } from '~/components/PageHeader'
 
+export function meta() {
+    return [
+        { title: 'Criar Calendário Personalizado - Água de Víbora' },
+        {
+            name: 'description',
+            content:
+                'Crie o seu próprio calendário de rega personalizado. Configure horários por casal e exporte para PDF ou Excel.',
+        },
+    ]
+}
+
 export default function CreateCustomSchedulePage() {
     const fetcher = useFetcher<GeneratedSchedule>()
     const navigate = useNavigate()
