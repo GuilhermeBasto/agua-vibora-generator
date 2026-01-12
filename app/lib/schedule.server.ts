@@ -418,7 +418,7 @@ const parseTimeRange = (
     // Check if it's a time range with "até"
     if (str.includes('até')) {
         // Split by "até" and handle variations like "às", "as", "á", "ás"
-        const parts = str.split(/até\s+(?:à?s?\s+)?/)
+        const parts = str.split(/até\s+(?:a[oà]?\s+)?(?:à?s?\s+)?/)
 
         if (parts.length >= 2) {
             const startTime = parsePortugueseTime(parts[0])
@@ -434,7 +434,25 @@ const parseTimeRange = (
         }
     }
 
-    // No "até" found, use single time with default duration
+    // Check for "X às Y" format (e.g., "Nascer do sol às 12h")
+    if (str.includes(' às ') || str.includes(' as ')) {
+        const parts = str.split(/\s+[àa]s\s+/)
+
+        if (parts.length >= 2) {
+            const startTime = parsePortugueseTime(parts[0])
+            const endTime = parsePortugueseTime(parts[1])
+            const duration = calculateDuration(startTime, endTime)
+
+            return {
+                start: startTime,
+                end: endTime,
+                durationHours: duration.hours,
+                durationMinutes: duration.minutes,
+            }
+        }
+    }
+
+    // No "até" or "às" found, use single time with default duration
     const startTime = parsePortugueseTime(timeStr)
     return {
         start: startTime,
@@ -517,6 +535,12 @@ const createSingleCalendarEvent = (
     const startHour = timeRange.start.hour
     const startMinute = timeRange.start.minute
 
+    // Calculate end time for Android compatibility (prefer DTEND over DURATION)
+    const totalMinutes =
+        timeRange.durationHours * 60 + timeRange.durationMinutes
+    const endDate = new Date(eventDate.getTime())
+    endDate.setHours(startHour, startMinute + totalMinutes, 0, 0)
+
     // Generate unique UID for Android compatibility
     // Format: timestamp-location-date@agua-vibora.pt
     const uid = `${eventDate.getTime()}-${location.replace(/\s+/g, '-')}-${startHour}${startMinute}@agua-vibora.pt`
@@ -529,10 +553,14 @@ const createSingleCalendarEvent = (
             startHour,
             startMinute,
         ],
-        duration: {
-            hours: timeRange.durationHours,
-            minutes: timeRange.durationMinutes,
-        },
+        // Use end time instead of duration for better Android compatibility
+        end: [
+            endDate.getFullYear(),
+            endDate.getMonth() + 1,
+            endDate.getDate(),
+            endDate.getHours(),
+            endDate.getMinutes(),
+        ],
         title: `Água do casal: ${location}`,
         description: `Horário: ${scheduleText}\nLocal: ${location}`,
         location: location,
@@ -547,11 +575,19 @@ const createSingleCalendarEvent = (
         sequence: 0,
         productId: 'agua-vibora-generator',
         calName: 'Água de Víbora',
+        startInputType: 'local',
+        startOutputType: 'local',
+        endInputType: 'local',
+        endOutputType: 'local',
         alarms: [
             {
                 action: 'display',
-                trigger: { hours: ALARM_HOURS_BEFORE, before: true },
-                description: `Água do casal daqui a ${ALARM_HOURS_BEFORE} horas`,
+                description: `Água do casal: ${location}`,
+                trigger: {
+                    hours: ALARM_HOURS_BEFORE,
+                    minutes: 0,
+                    before: true,
+                },
             },
         ],
     }
@@ -623,7 +659,7 @@ const generateScheduleCalendar = (
 
     // Configure calendar with Android-friendly settings
     const result = createEvents(events, {
-        productId: 'agua-vibora-generator',
+        productId: '-//Água de Víbora//agua-vibora-generator//PT',
         calName: `Água de Víbora ${year}`,
     })
 
@@ -645,6 +681,14 @@ const generateScheduleCalendar = (
         icsContent = icsContent.replace(
             'VERSION:2.0',
             'VERSION:2.0\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH'
+        )
+    }
+
+    // Ensure X-WR-CALNAME is present for calendar name
+    if (!icsContent.includes('X-WR-CALNAME:')) {
+        icsContent = icsContent.replace(
+            'METHOD:PUBLISH',
+            `METHOD:PUBLISH\r\nX-WR-CALNAME:Água de Víbora ${year}\r\nX-WR-TIMEZONE:Europe/Lisbon`
         )
     }
 
