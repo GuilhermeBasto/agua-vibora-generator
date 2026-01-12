@@ -32,8 +32,8 @@ const SCHEDULE_END = { month: 8, date: 29 }
 /** Date format string for Portuguese locale */
 const DATE_FORMAT = "dd 'de' MMMM"
 
-/** Geographic coordinates for Abadim, Cabeceiras de Basto, Portugal (not currently used) */
-const _ABADIM_COORDINATES = {
+/** Geographic coordinates for Abadim, Cabeceiras de Basto, Portugal */
+const ABADIM_COORDINATES = {
     latitude: 41.5167, // 41°31'N
     longitude: -7.9167, // 7°55'W
 }
@@ -41,24 +41,23 @@ const _ABADIM_COORDINATES = {
 /**
  * Calculates the exact sunset time for a given date in Abadim
  * Uses astronomical calculations based on geographic coordinates
- * (Not currently used - kept for potential future ancestral rule implementation)
  *
  * @param date - The date to calculate sunset for
  * @returns Hour of sunset (24-hour format, decimal)
  *
  * @example
- * _getSunsetHour(new Date(2026, 5, 25)) // June 25, 2026
+ * getSunsetHour(new Date(2026, 5, 25)) // June 25, 2026
  * // Returns: ~21.5 (around 21:30 in summer)
  *
  * @example
- * _getSunsetHour(new Date(2026, 11, 25)) // December 25, 2026
+ * getSunsetHour(new Date(2026, 11, 25)) // December 25, 2026
  * // Returns: ~17.15 (around 17:09 in winter)
  */
-const _getSunsetHour = (date: Date): number => {
+const getSunsetHour = (date: Date): number => {
     const times = SunCalc.getTimes(
         date,
-        _ABADIM_COORDINATES.latitude,
-        _ABADIM_COORDINATES.longitude
+        ABADIM_COORDINATES.latitude,
+        ABADIM_COORDINATES.longitude
     )
 
     const sunsetDate = times.sunset
@@ -462,44 +461,207 @@ const parseTimeRange = (
     }
 }
 
+/** Milliseconds in one day */
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+/** Number of hours before event to trigger alarm notification */
+const ALARM_HOURS_BEFORE = 2
+
+/**
+ * Checks if a schedule starts after sunset (ancestral "next day")
+ *
+ * In the ancestral system, the "day" started at sunset, not midnight.
+ * ANY schedule starting at or after sunset belongs to the ancestral "next day".
+ * Therefore, in the modern calendar (ICS), it should start on the PREVIOUS day.
+ *
+ * This function uses precise astronomical calculations for Abadim, Cabeceiras de Basto.
+ * Sunset varies throughout the year: ~21:30 in summer (June-July) to ~17:00 in winter (December)
+ *
+ * Rule: If start time is at or after sunset for that specific date, use previous day.
+ *
+ * @param startTime - Parsed start time
+ * @param date - The date to check sunset for
+ * @returns true if event starts after sunset (should use previous day in ICS)
+ *
+ * @example
+ * // Summer (June 25, sunset ~21:30)
+ * startsAfterSunset({ hour: 22, minute: 0 }, new Date(2026, 5, 25))
+ * // Returns: true → 22:00 > 21:30 = use previous day
+ *
+ * @example
+ * // Summer (June 25, sunset ~21:30)
+ * startsAfterSunset({ hour: 15, minute: 0 }, new Date(2026, 5, 25))
+ * // Returns: false → 15:00 < 21:30 = same day
+ *
+ * @example
+ * // Winter (December 25, sunset ~17:00)
+ * startsAfterSunset({ hour: 18, minute: 0 }, new Date(2026, 11, 25))
+ * // Returns: true → 18:00 > 17:00 = use previous day
+ */
+const startsAfterSunset = (
+    startTime: { hour: number; minute: number },
+    date: Date
+): boolean => {
+    const sunsetHour = getSunsetHour(date)
+    const startHourDecimal = startTime.hour + startTime.minute / 60
+
+    // If event starts at or after sunset, it belongs to the "next day" in ancestral system
+    // Therefore, in modern calendar (ICS), use the PREVIOUS day
+    return startHourDecimal >= sunsetHour
+}
+
+/**
+ * Creates a single ICS event from schedule text and date
+ *
+ * @param scheduleText - The schedule text (e.g., "10 da noite até á 1h30")
+ * @param location - Location name
+ * @param date - Event date
+ * @returns ICS event attributes
+ */
+const createSingleCalendarEvent = (
+    scheduleText: string,
+    location: string,
+    date: Date
+): EventAttributes => {
+    const timeRange = parseTimeRange(scheduleText)
+    const usePreviousDay = startsAfterSunset(timeRange.start, date)
+
+    // Ancestral rule: Events after sunset start on previous day
+    const eventDate = usePreviousDay
+        ? new Date(date.getTime() - MS_PER_DAY)
+        : date
+
+    // Use the parsed start time (no override needed)
+    const startHour = timeRange.start.hour
+    const startMinute = timeRange.start.minute
+
+    // Calculate end time for Android compatibility (prefer DTEND over DURATION)
+    const totalMinutes =
+        timeRange.durationHours * 60 + timeRange.durationMinutes
+    const endDate = new Date(eventDate.getTime())
+    endDate.setHours(startHour, startMinute + totalMinutes, 0, 0)
+
+    // Generate unique UID for Android compatibility
+    // Format: timestamp-location-date@agua-vibora.pt
+    const uid = `${eventDate.getTime()}-${location.replace(/\s+/g, '-')}-${startHour}${startMinute}@agua-vibora.pt`
+
+    return {
+        start: [
+            eventDate.getFullYear(),
+            eventDate.getMonth() + 1,
+            eventDate.getDate(),
+            startHour,
+            startMinute,
+        ],
+        // Use end time instead of duration for better Android compatibility
+        end: [
+            endDate.getFullYear(),
+            endDate.getMonth() + 1,
+            endDate.getDate(),
+            endDate.getHours(),
+            endDate.getMinutes(),
+        ],
+        title: `Água do casal: ${location}`,
+        description: `Horário: ${scheduleText}\nLocal: ${location}`,
+        location: location,
+        status: 'CONFIRMED',
+        busyStatus: 'BUSY',
+        organizer: {
+            name: 'Água de Víbora',
+            email: 'noreply@agua-vibora.pt',
+        },
+        categories: ['Água de víbora', location],
+        uid: uid,
+        sequence: 0,
+        productId: 'agua-vibora-generator',
+        calName: 'Água de Víbora',
+        startInputType: 'local',
+        startOutputType: 'local',
+        endInputType: 'local',
+        endOutputType: 'local',
+        alarms: [
+            {
+                action: 'display',
+                description: `Água do casal: ${location}`,
+                trigger: {
+                    hours: ALARM_HOURS_BEFORE,
+                    minutes: 0,
+                    before: true,
+                },
+            },
+        ],
+    }
+}
+
+/**
+ * Creates ICS event objects from a schedule entry
+ *
+ * Handles schedules with multiple time slots separated by "/" (e.g., "9h30 até 10h30 da Noite/13h30 até 17h")
+ * and creates separate events for each time slot.
+ *
+ * Applies the ancestral rule: Events starting after sunset use the PREVIOUS day,
+ * as the "day" began at sunset in the traditional system.
+ *
+ * Uses precise astronomical calculations for Abadim, Cabeceiras de Basto.
+ * Sunset varies: ~21:30 in summer, ~17:00 in winter.
+ *
+ * @param item - Schedule entry
+ * @returns Array of ICS event attributes (one or more)
+ *
+ * @example
+ * // Single event: "25 de junho | Torre | 3h da tarde até ao pôr do sol"
+ * // Returns: [EventAttributes] (1 event)
+ *
+ * @example
+ * // Multiple events: "25 de junho | Passo | 9h30 até 10h30 da Noite/13h30 até 17h"
+ * // Returns: [EventAttributes, EventAttributes] (2 events)
+ */
+const createCalendarEvents = (item: ScheduleEntry): EventAttributes[] => {
+    // Check if schedule contains multiple time slots separated by "/"
+    if (item.schedule.includes('/')) {
+        const timeSlots = item.schedule.split('/').map((slot) => slot.trim())
+        return timeSlots.map((scheduleText) =>
+            createSingleCalendarEvent(scheduleText, item.location, item.date)
+        )
+    }
+
+    // Single time slot
+    return [createSingleCalendarEvent(item.schedule, item.location, item.date)]
+}
+
 /**
  * Generates an iCalendar (.ics) file for Google Calendar integration
+ *
+ * Ancestral System Rule: In the traditional system, the "day" started at sunset.
+ * Therefore, overnight events (night to early morning) start on the PREVIOUS day.
+ *
  * @param year - The target year
- * @returns ICS file content as string or error
+ * @returns ICS file content as string or error object
+ *
+ * @example
+ * // Table row: "25 de agosto | Passo | 10 da noite até ás 1h30"
+ * // ICS event: August 24, 22:00 → August 25, 01:30
+ *
+ * @example
+ * // Table row: "25 de julho | Figueiredo | Ao pôr do sol até à meia noite"
+ * // ICS event: July 24, 20:30 → July 25, 00:00
  */
 const generateScheduleCalendar = (
     year: number
 ): { error: Error } | { value: string } => {
     const scheduleData = generateScheduleData(year, false)
 
+    // Convert schedule entries to calendar events
+    // Use flatMap to handle multiple events per schedule entry (e.g., "9h30/13h30")
     const events: EventAttributes[] = scheduleData
-        .filter((item) => item.schedule) // Only include entries with schedules
-        .map((item) => {
-            // Parse the time range from the schedule string
-            const timeRange = parseTimeRange(item.schedule)
+        .filter((item) => item.schedule) // Only entries with schedules
+        .flatMap(createCalendarEvents)
 
-            return {
-                start: [
-                    item.date.getFullYear(),
-                    item.date.getMonth() + 1,
-                    item.date.getDate(),
-                    timeRange.start.hour,
-                    timeRange.start.minute,
-                ],
-                duration: {
-                    hours: timeRange.durationHours,
-                    minutes: timeRange.durationMinutes,
-                },
-                title: `Água do casal: ${item.location}`,
-                description: `Horário: ${item.schedule}`,
-                status: 'CONFIRMED' as const,
-                busyStatus: 'BUSY' as const,
-                organizer: { name: 'Água de Víbora' },
-                categories: ['Água de víbora', item.location],
-            }
-        })
-
-    const result = createEvents(events)
+    // Configure calendar with Android-friendly settings
+    const result = createEvents(events, {
+        productId: '-//Água de Víbora//agua-vibora-generator//PT',
+        calName: `Água de Víbora ${year}`,
+    })
 
     if (result.error) {
         return { error: result.error }
@@ -509,7 +671,28 @@ const generateScheduleCalendar = (
         return { error: new Error('Failed to generate calendar') }
     }
 
-    return { value: result.value }
+    // Normalize line endings for better compatibility across platforms
+    // Android requires CRLF (\r\n) line endings
+    let icsContent = result.value.replace(/\r?\n/g, '\r\n')
+
+    // Ensure proper ICS structure for Android
+    // Add CALSCALE and METHOD if not present
+    if (!icsContent.includes('CALSCALE:')) {
+        icsContent = icsContent.replace(
+            'VERSION:2.0',
+            'VERSION:2.0\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH'
+        )
+    }
+
+    // Ensure X-WR-CALNAME is present for calendar name
+    if (!icsContent.includes('X-WR-CALNAME:')) {
+        icsContent = icsContent.replace(
+            'METHOD:PUBLISH',
+            `METHOD:PUBLISH\r\nX-WR-CALNAME:Água de Víbora ${year}\r\nX-WR-TIMEZONE:Europe/Lisbon`
+        )
+    }
+
+    return { value: icsContent }
 }
 
 export {
