@@ -6,7 +6,12 @@
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import ExcelJS from 'exceljs'
-import ical, { type ICalEventData } from 'ical-generator'
+import ical, {
+    ICalCalendarMethod,
+    ICalEventBusyStatus,
+    ICalEventStatus,
+    type ICalEventData,
+} from 'ical-generator'
 import SunCalc from 'suncalc'
 import type { ScheduleEntry } from './types'
 import {
@@ -543,7 +548,12 @@ const createSingleCalendarEvent = (
         timeRange.durationHours * 60 + timeRange.durationMinutes
     const endDate = new Date(startDate.getTime() + totalMinutes * 60 * 1000)
 
+    // Generate unique ID (UID) for Android compatibility
+    // Format: timestamp-location-date@agua-vibora.pt
+    const eventId = `${startDate.getTime()}-${location.replace(/\s+/g, '-')}-${date.getDate()}@agua-vibora.pt`
+
     return {
+        id: eventId,
         start: startDate,
         end: endDate,
         summary: `Água do casal: ${location}`,
@@ -559,6 +569,8 @@ const createSingleCalendarEvent = (
                 trigger: ALARM_HOURS_BEFORE * 60 * 60, // 2 hours before in seconds
             },
         ],
+        status: ICalEventStatus.CONFIRMED,
+        busystatus: ICalEventBusyStatus.BUSY,
     }
 }
 
@@ -630,6 +642,7 @@ const generateScheduleCalendar = (
                 language: 'PT',
             },
             timezone: 'Europe/Lisbon',
+            method: ICalCalendarMethod.PUBLISH, // Required for Android compatibility
         })
 
         // Convert schedule entries to calendar events
@@ -643,7 +656,58 @@ const generateScheduleCalendar = (
             calendar.createEvent(eventData)
         })
 
-        // Generate ICS content
+        // Generate ICS content with proper line endings (CRLF) for compatibility
+        const icsContent = calendar.toString()
+
+        return { value: icsContent }
+    } catch (error) {
+        return {
+            error:
+                error instanceof Error
+                    ? error
+                    : new Error('Failed to generate calendar'),
+        }
+    }
+}
+
+/**
+ * Generates an iCalendar (.ics) file from custom schedule data
+ *
+ * @param name - The schedule name
+ * @param year - The target year
+ * @param data - Array of schedule entries
+ * @returns ICS file content as string or error object
+ */
+const generateCustomScheduleCalendar = (
+    name: string,
+    year: number,
+    data: ScheduleEntry[]
+): { error: Error } | { value: string } => {
+    try {
+        // Create calendar using ical-generator (better mobile compatibility)
+        const calendar = ical({
+            name: `${name} ${year}`,
+            prodId: {
+                company: 'Água de Víbora',
+                product: 'agua-vibora-generator',
+                language: 'PT',
+            },
+            timezone: 'Europe/Lisbon',
+            method: ICalCalendarMethod.PUBLISH, // Required for Android compatibility
+        })
+
+        // Convert schedule entries to calendar events
+        // Use flatMap to handle multiple events per schedule entry (e.g., "9h30/13h30")
+        const events: ICalEventData[] = data
+            .filter((item) => item.schedule) // Only entries with schedules
+            .flatMap(createCalendarEvents)
+
+        // Add all events to calendar
+        events.forEach((eventData) => {
+            calendar.createEvent(eventData)
+        })
+
+        // Generate ICS content with proper line endings (CRLF) for compatibility
         const icsContent = calendar.toString()
 
         return { value: icsContent }
@@ -664,4 +728,5 @@ export {
     generateScheduleWorkbook,
     generateSchedulePDF,
     generateScheduleCalendar,
+    generateCustomScheduleCalendar,
 }

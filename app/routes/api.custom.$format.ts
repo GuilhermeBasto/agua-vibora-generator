@@ -4,6 +4,8 @@ import type { Route } from './+types/api.custom.$format'
 export async function action({ params, request }: Route.ActionArgs) {
     const { generatePDF, generateWorkbookFromData, getResponseHeaders } =
         await import('~/lib/utils.server')
+    const { generateCustomScheduleCalendar } =
+        await import('~/lib/schedule.server')
     const format = params.format?.toLowerCase()
 
     if (request.method !== 'POST') {
@@ -62,6 +64,23 @@ export async function action({ params, request }: Route.ActionArgs) {
 
                 return new Response(uint8, {
                     headers: getResponseHeaders(fileBase, 'xlsx', uint8.length),
+                })
+            }
+
+            case 'ics': {
+                const result = generateCustomScheduleCalendar(
+                    payload.name || 'Agenda',
+                    yearNum,
+                    payload.data
+                )
+                if ('error' in result) throw result.error
+
+                return new Response(result.value, {
+                    headers: getResponseHeaders(
+                        fileBase,
+                        'ics',
+                        result.value.length
+                    ),
                 })
             }
 

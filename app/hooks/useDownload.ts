@@ -48,19 +48,32 @@ export function useDownload(
 
                 const blob = await res.blob()
 
-                // Criar o download de forma segura
-                const url = window.URL.createObjectURL(blob)
-                const link = document.createElement('a')
-
                 const fileName = `${options?.fileNamePrefix || generatedSchedule.name || 'agenda'}-${generatedSchedule.year}.${format}`
+
+                // Android-compatible download approach
+                // Use proper MIME type for ICS files on Android
+                const mimeType =
+                    format === 'ics'
+                        ? 'text/calendar'
+                        : format === 'pdf'
+                          ? 'application/pdf'
+                          : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+                const properBlob = new Blob([blob], { type: mimeType })
+                const url = window.URL.createObjectURL(properBlob)
+                const link = document.createElement('a')
 
                 link.href = url
                 link.setAttribute('download', fileName)
+                link.style.display = 'none'
                 document.body.appendChild(link)
                 link.click()
 
-                link.parentNode?.removeChild(link)
-                window.URL.revokeObjectURL(url)
+                // Cleanup with slight delay for Android compatibility
+                setTimeout(() => {
+                    link.parentNode?.removeChild(link)
+                    window.URL.revokeObjectURL(url)
+                }, 100)
 
                 toast.success('Download concluído com sucesso!')
 
