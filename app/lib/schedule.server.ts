@@ -517,6 +517,10 @@ const createSingleCalendarEvent = (
     const startHour = timeRange.start.hour
     const startMinute = timeRange.start.minute
 
+    // Generate unique UID for Android compatibility
+    // Format: timestamp-location-date@agua-vibora.pt
+    const uid = `${eventDate.getTime()}-${location.replace(/\s+/g, '-')}-${startHour}${startMinute}@agua-vibora.pt`
+
     return {
         start: [
             eventDate.getFullYear(),
@@ -539,6 +543,10 @@ const createSingleCalendarEvent = (
             email: 'noreply@agua-vibora.pt',
         },
         categories: ['Água de víbora', location],
+        uid: uid,
+        sequence: 0,
+        productId: 'agua-vibora-generator',
+        calName: 'Água de Víbora',
         alarms: [
             {
                 action: 'display',
@@ -613,7 +621,11 @@ const generateScheduleCalendar = (
         .filter((item) => item.schedule) // Only entries with schedules
         .flatMap(createCalendarEvents)
 
-    const result = createEvents(events)
+    // Configure calendar with Android-friendly settings
+    const result = createEvents(events, {
+        productId: 'agua-vibora-generator',
+        calName: `Água de Víbora ${year}`,
+    })
 
     if (result.error) {
         return { error: result.error }
@@ -624,7 +636,17 @@ const generateScheduleCalendar = (
     }
 
     // Normalize line endings for better compatibility across platforms
-    const icsContent = result.value.replace(/\r?\n/g, '\r\n')
+    // Android requires CRLF (\r\n) line endings
+    let icsContent = result.value.replace(/\r?\n/g, '\r\n')
+
+    // Ensure proper ICS structure for Android
+    // Add CALSCALE and METHOD if not present
+    if (!icsContent.includes('CALSCALE:')) {
+        icsContent = icsContent.replace(
+            'VERSION:2.0',
+            'VERSION:2.0\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH'
+        )
+    }
 
     return { value: icsContent }
 }

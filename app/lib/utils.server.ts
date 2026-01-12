@@ -362,7 +362,8 @@ const getContentType = (type: 'pdf' | 'xlsx' | 'ics'): string => {
         case 'xlsx':
             return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         case 'ics':
-            return 'text/calendar; charset=utf-8'
+            // Android-friendly ICS content type with method
+            return 'text/calendar; charset=utf-8; method=PUBLISH'
         default:
             return 'application/octet-stream'
     }
