@@ -550,7 +550,12 @@ const createSingleCalendarEvent = (
 
     // Generate unique ID (UID) for Android compatibility
     // Format: timestamp-location-date@agua-vibora.pt
-    const eventId = `${startDate.getTime()}-${location.replace(/\s+/g, '-')}-${date.getDate()}@agua-vibora.pt`
+    // Use a more robust ID generation that includes full ISO timestamp
+    const isoDate = startDate
+        .toISOString()
+        .replace(/[-:.TZ]/g, '')
+        .slice(0, 15)
+    const eventId = `${isoDate}-${location.replace(/\s+/g, '-')}@agua-vibora.pt`
 
     return {
         id: eventId,
@@ -566,11 +571,14 @@ const createSingleCalendarEvent = (
         categories: [{ name: 'Água de víbora' }, { name: location }],
         alarms: [
             {
+                action: 'DISPLAY',
                 trigger: ALARM_HOURS_BEFORE * 60 * 60, // 2 hours before in seconds
+                description: 'Lembrete de rega',
             },
         ],
         status: ICalEventStatus.CONFIRMED,
         busystatus: ICalEventBusyStatus.BUSY,
+        transp: 'OPAQUE', // Android compatibility - marks as busy time
     }
 }
 
@@ -634,6 +642,7 @@ const generateScheduleCalendar = (
         const scheduleData = generateScheduleData(year, false)
 
         // Create calendar using ical-generator (better mobile compatibility)
+        // Use PUBLISH method explicitly for Android compatibility
         const calendar = ical({
             name: `Água de Víbora ${year}`,
             prodId: {
@@ -642,7 +651,8 @@ const generateScheduleCalendar = (
                 language: 'PT',
             },
             timezone: 'Europe/Lisbon',
-            method: ICalCalendarMethod.PUBLISH, // Required for Android compatibility
+            method: ICalCalendarMethod.PUBLISH,
+            version: '2.0',
         })
 
         // Convert schedule entries to calendar events
@@ -656,8 +666,16 @@ const generateScheduleCalendar = (
             calendar.createEvent(eventData)
         })
 
-        // Generate ICS content with proper line endings (CRLF) for compatibility
-        const icsContent = calendar.toString()
+        // Generate ICS content with proper CRLF line endings for compatibility
+        let icsContent = calendar.toString()
+
+        // Ensure CRLF line endings (RFC 5545 requirement for Android)
+        icsContent = icsContent.replace(/\r?\n/g, '\r\n')
+
+        // Ensure file ends with proper line terminator
+        if (!icsContent.endsWith('\r\n')) {
+            icsContent += '\r\n'
+        }
 
         return { value: icsContent }
     } catch (error) {
@@ -694,6 +712,7 @@ const generateCustomScheduleCalendar = (
             },
             timezone: 'Europe/Lisbon',
             method: ICalCalendarMethod.PUBLISH, // Required for Android compatibility
+            version: '2.0',
         })
 
         // Convert schedule entries to calendar events
@@ -707,8 +726,16 @@ const generateCustomScheduleCalendar = (
             calendar.createEvent(eventData)
         })
 
-        // Generate ICS content with proper line endings (CRLF) for compatibility
-        const icsContent = calendar.toString()
+        // Generate ICS content with proper CRLF line endings for compatibility
+        let icsContent = calendar.toString()
+
+        // Ensure CRLF line endings (RFC 5545 requirement for Android)
+        icsContent = icsContent.replace(/\r?\n/g, '\r\n')
+
+        // Ensure file ends with proper line terminator
+        if (!icsContent.endsWith('\r\n')) {
+            icsContent += '\r\n'
+        }
 
         return { value: icsContent }
     } catch (error) {
