@@ -362,8 +362,7 @@ const getContentType = (type: 'pdf' | 'xlsx' | 'ics'): string => {
         case 'xlsx':
             return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         case 'ics':
-            // Android-friendly ICS content type with method
-            return 'text/calendar; charset=utf-8; method=PUBLISH'
+            return 'text/calendar; charset=utf-8'
         default:
             return 'application/octet-stream'
     }
@@ -374,19 +373,10 @@ export const getResponseHeaders = (
     type: 'pdf' | 'xlsx' | 'ics',
     length: number
 ): HeadersInit => {
-    const headers: HeadersInit = {
+    return {
         'Content-Type': getContentType(type),
         'Content-Disposition': getContentDispositionHeader(fileName),
         'Content-Length': length.toString(),
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'public, max-age=86400',
     }
-
-    // Add extra headers for ICS files to improve Android compatibility
-    if (type === 'ics') {
-        headers['Content-Transfer-Encoding'] = 'binary'
-        headers['Accept-Ranges'] = 'bytes'
-    }
-
-    return headers
 }
