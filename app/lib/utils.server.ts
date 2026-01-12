@@ -377,6 +377,6 @@ export const getResponseHeaders = (
         'Content-Type': getContentType(type),
         'Content-Disposition': getContentDispositionHeader(fileName),
         'Content-Length': length.toString(),
-        'Cache-Control': 'public, max-age=86400',
+        'Cache-Control': type === 'ics' ? 'no-cache' : 'public, max-age=86400',
     }
 }
