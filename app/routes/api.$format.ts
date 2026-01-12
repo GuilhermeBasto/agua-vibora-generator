@@ -104,11 +104,14 @@ export async function loader({ params, request }: Route.LoaderArgs) {
                     if ('error' in result) throw result.error
                     const fileName = getFileName(year, false, 'ics', type)
 
-                    return new Response(result.value, {
+                    // Convert string to UTF-8 encoded buffer for Android compatibility
+                    const icsBuffer = new TextEncoder().encode(result.value)
+
+                    return new Response(icsBuffer, {
                         headers: getResponseHeaders(
                             fileName,
                             'ics',
-                            result.value.length
+                            icsBuffer.length
                         ),
                     })
                 }

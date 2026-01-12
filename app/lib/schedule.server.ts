@@ -572,13 +572,15 @@ const createSingleCalendarEvent = (
         alarms: [
             {
                 action: 'DISPLAY',
-                trigger: ALARM_HOURS_BEFORE * 60 * 60, // 2 hours before in seconds
+                trigger: -ALARM_HOURS_BEFORE * 60 * 60, // 2 hours before (negative for duration)
                 description: 'Lembrete de rega',
             },
         ],
         status: ICalEventStatus.CONFIRMED,
         busystatus: ICalEventBusyStatus.BUSY,
         transp: 'OPAQUE', // Android compatibility - marks as busy time
+        url: 'https://agua-vibora.pt', // Android requires URL field for better compatibility
+        sequence: 0, // Event sequence number for Android compatibility
     }
 }
 
@@ -653,6 +655,7 @@ const generateScheduleCalendar = (
             timezone: 'Europe/Lisbon',
             method: ICalCalendarMethod.PUBLISH,
             version: '2.0',
+            ttl: 86400 * 7, // 7 days TTL for better Android compatibility
         })
 
         // Convert schedule entries to calendar events
@@ -713,6 +716,7 @@ const generateCustomScheduleCalendar = (
             timezone: 'Europe/Lisbon',
             method: ICalCalendarMethod.PUBLISH, // Required for Android compatibility
             version: '2.0',
+            ttl: 86400 * 7, // 7 days TTL for better Android compatibility
         })
 
         // Convert schedule entries to calendar events

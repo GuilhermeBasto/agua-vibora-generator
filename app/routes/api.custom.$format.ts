@@ -75,11 +75,14 @@ export async function action({ params, request }: Route.ActionArgs) {
                 )
                 if ('error' in result) throw result.error
 
-                return new Response(result.value, {
+                // Convert string to UTF-8 encoded buffer for Android compatibility
+                const icsBuffer = new TextEncoder().encode(result.value)
+
+                return new Response(icsBuffer, {
                     headers: getResponseHeaders(
                         fileBase,
                         'ics',
-                        result.value.length
+                        icsBuffer.length
                     ),
                 })
             }
