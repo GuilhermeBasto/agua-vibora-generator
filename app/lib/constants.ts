@@ -9,5 +9,5 @@ export const AVAILABLE_VILLAGES = [
     'Eirô',
     'Cimo de Aldeia',
     'Portela',
-    'Casa de Baixo',
+    'Casas de Baixo',
 ] as const

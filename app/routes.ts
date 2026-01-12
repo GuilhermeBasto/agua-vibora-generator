@@ -2,6 +2,7 @@ import { type RouteConfig, index, route } from '@react-router/dev/routes'
 
 export default [
     index('routes/home.tsx'),
+    route('about', 'routes/about.tsx'),
     route('my-schedule', 'routes/my-schedule.tsx'),
     route('create-custom-schedule', 'routes/create-custom-schedule.tsx'),
     route(

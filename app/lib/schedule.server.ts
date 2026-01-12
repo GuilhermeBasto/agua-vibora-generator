@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import ExcelJS from 'exceljs'
 import { createEvents, type EventAttributes } from 'ics'
+import SunCalc from 'suncalc'
 import type { ScheduleEntry } from './types'
 import {
     addBordersToCell,
@@ -31,17 +32,51 @@ const SCHEDULE_END = { month: 8, date: 29 }
 /** Date format string for Portuguese locale */
 const DATE_FORMAT = "dd 'de' MMMM"
 
+/** Geographic coordinates for Abadim, Cabeceiras de Basto, Portugal */
+const ABADIM_COORDINATES = {
+    latitude: 41.5167, // 41°31'N
+    longitude: -7.9167, // 7°55'W
+}
+
+/**
+ * Calculates the exact sunset time for a given date in Abadim
+ * Uses astronomical calculations based on geographic coordinates
+ *
+ * @param date - The date to calculate sunset for
+ * @returns Hour of sunset (24-hour format, decimal)
+ *
+ * @example
+ * getSunsetHour(new Date(2026, 5, 25)) // June 25, 2026
+ * // Returns: ~21.5 (around 21:30 in summer)
+ *
+ * @example
+ * getSunsetHour(new Date(2026, 11, 25)) // December 25, 2026
+ * // Returns: ~17.15 (around 17:09 in winter)
+ */
+const getSunsetHour = (date: Date): number => {
+    const times = SunCalc.getTimes(
+        date,
+        ABADIM_COORDINATES.latitude,
+        ABADIM_COORDINATES.longitude
+    )
+
+    const sunsetDate = times.sunset
+    const sunsetHour = sunsetDate.getHours() + sunsetDate.getMinutes() / 60
+
+    return sunsetHour
+}
+
 /**
  * Villages grouped by region (Torre and Santo-Antonio)
  */
-const VILLAGES: Record<string, string[]> = {
+export const VILLAGES: Record<string, string[]> = {
     Torre: ['Torre', 'Crasto', 'Passo', 'Ramada', 'Figueiredo', 'Redondinho'],
     'Santo-Antonio': [
         'Casa Nova',
         'Eirô',
         'Cimo de Aldeia',
         'Portela',
-        'Casa de Baixo',
+        'Casas de Baixo',
     ],
 }
 
@@ -320,14 +355,55 @@ const parsePortugueseTime = (
     return { hour, minute }
 }
 
+/** Default duration when no end time is specified (in hours) */
+const DEFAULT_DURATION_HOURS = 2
+
+/** Minutes in a day for overnight calculation */
+const MINUTES_PER_DAY = 24 * 60
+
+/**
+ * Calculates duration between two times, handling overnight scenarios
+ * @param start - Start time
+ * @param end - End time
+ * @returns Duration in hours and minutes
+ */
+const calculateDuration = (
+    start: { hour: number; minute: number },
+    end: { hour: number; minute: number }
+): { hours: number; minutes: number } => {
+    const startMinutes = start.hour * 60 + start.minute
+    const endMinutes = end.hour * 60 + end.minute
+
+    // Handle overnight: if end < start, it's the next day
+    let totalMinutes = endMinutes - startMinutes
+    if (totalMinutes < 0) {
+        totalMinutes += MINUTES_PER_DAY
+    }
+
+    return {
+        hours: Math.floor(totalMinutes / 60),
+        minutes: totalMinutes % 60,
+    }
+}
+
 /**
  * Parses Portuguese time range strings and calculates duration
- * Examples:
- * - "12h até as 2h da tarde" -> { start: {hour: 12, minute: 0}, end: {hour: 14, minute: 0}, durationHours: 2, durationMinutes: 0 }
- * - "10 da noite até ás 1h30" -> { start: {hour: 22, minute: 0}, end: {hour: 1, minute: 30}, durationHours: 3, durationMinutes: 30 }
- * - "9h30 até 10h30" -> { start: {hour: 9, minute: 30}, end: {hour: 10, minute: 30}, durationHours: 1, durationMinutes: 0 }
+ * Supports various formats: "12h até as 2h da tarde", "10 da noite até ás 1h30", etc.
+ *
  * @param timeStr - Time string in Portuguese
  * @returns Object with start time, optional end time, and duration
+ *
+ * @example
+ * parseTimeRange("12h até as 2h da tarde")
+ * // Returns: { start: {hour: 12, minute: 0}, end: {hour: 14, minute: 0}, durationHours: 2, durationMinutes: 0 }
+ *
+ * @example
+ * parseTimeRange("10 da noite até ás 1h30")
+ * // Returns: { start: {hour: 22, minute: 0}, end: {hour: 1, minute: 30}, durationHours: 3, durationMinutes: 30 }
+ *
+ * @example
+ * parseTimeRange("1h30 da tarde")
+ * // Returns: { start: {hour: 13, minute: 30}, durationHours: 2, durationMinutes: 0 }
  */
 const parseTimeRange = (
     timeStr: string
@@ -347,109 +423,195 @@ const parseTimeRange = (
         if (parts.length >= 2) {
             const startTime = parsePortugueseTime(parts[0])
             const endTime = parsePortugueseTime(parts[1])
-
-            // Calculate duration (handle overnight scenarios)
-            let totalMinutes =
-                endTime.hour * 60 +
-                endTime.minute -
-                (startTime.hour * 60 + startTime.minute)
-
-            // If negative, it means the end time is the next day
-            if (totalMinutes < 0) {
-                totalMinutes += 24 * 60 // Add 24 hours
-            }
-
-            const durationHours = Math.floor(totalMinutes / 60)
-            const durationMinutes = totalMinutes % 60
+            const duration = calculateDuration(startTime, endTime)
 
             return {
                 start: startTime,
                 end: endTime,
-                durationHours,
-                durationMinutes,
+                durationHours: duration.hours,
+                durationMinutes: duration.minutes,
             }
         }
     }
 
-    // No "até" found, use single time with default 2 hour duration
+    // No "até" found, use single time with default duration
     const startTime = parsePortugueseTime(timeStr)
     return {
         start: startTime,
-        durationHours: 2,
+        durationHours: DEFAULT_DURATION_HOURS,
         durationMinutes: 0,
     }
 }
 
+/** Milliseconds in one day */
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+/** Number of hours before event to trigger alarm notification */
+const ALARM_HOURS_BEFORE = 2
+
+/**
+ * Checks if a schedule starts after sunset (ancestral "next day")
+ *
+ * In the ancestral system, the "day" started at sunset, not midnight.
+ * ANY schedule starting at or after sunset belongs to the ancestral "next day".
+ * Therefore, in the modern calendar (ICS), it should start on the PREVIOUS day.
+ *
+ * This function uses precise astronomical calculations for Abadim, Cabeceiras de Basto.
+ * Sunset varies throughout the year: ~21:30 in summer (June-July) to ~17:00 in winter (December)
+ *
+ * Rule: If start time is at or after sunset for that specific date, use previous day.
+ *
+ * @param startTime - Parsed start time
+ * @param date - The date to check sunset for
+ * @returns true if event starts after sunset (should use previous day in ICS)
+ *
+ * @example
+ * // Summer (June 25, sunset ~21:30)
+ * startsAfterSunset({ hour: 22, minute: 0 }, new Date(2026, 5, 25))
+ * // Returns: true → 22:00 > 21:30 = use previous day
+ *
+ * @example
+ * // Summer (June 25, sunset ~21:30)
+ * startsAfterSunset({ hour: 15, minute: 0 }, new Date(2026, 5, 25))
+ * // Returns: false → 15:00 < 21:30 = same day
+ *
+ * @example
+ * // Winter (December 25, sunset ~17:00)
+ * startsAfterSunset({ hour: 18, minute: 0 }, new Date(2026, 11, 25))
+ * // Returns: true → 18:00 > 17:00 = use previous day
+ */
+const startsAfterSunset = (
+    startTime: { hour: number; minute: number },
+    date: Date
+): boolean => {
+    const sunsetHour = getSunsetHour(date)
+    const startHourDecimal = startTime.hour + startTime.minute / 60
+
+    // If event starts at or after sunset, it belongs to the "next day" in ancestral system
+    // Therefore, in modern calendar (ICS), use the PREVIOUS day
+    return startHourDecimal >= sunsetHour
+}
+
+/**
+ * Creates a single ICS event from schedule text and date
+ *
+ * @param scheduleText - The schedule text (e.g., "10 da noite até á 1h30")
+ * @param location - Location name
+ * @param date - Event date
+ * @returns ICS event attributes
+ */
+const createSingleCalendarEvent = (
+    scheduleText: string,
+    location: string,
+    date: Date
+): EventAttributes => {
+    const timeRange = parseTimeRange(scheduleText)
+    const usePreviousDay = startsAfterSunset(timeRange.start, date)
+
+    // Ancestral rule: Events after sunset start on previous day
+    const eventDate = usePreviousDay
+        ? new Date(date.getTime() - MS_PER_DAY)
+        : date
+
+    // Use the parsed start time (no override needed)
+    const startHour = timeRange.start.hour
+    const startMinute = timeRange.start.minute
+
+    return {
+        start: [
+            eventDate.getFullYear(),
+            eventDate.getMonth() + 1,
+            eventDate.getDate(),
+            startHour,
+            startMinute,
+        ],
+        duration: {
+            hours: timeRange.durationHours,
+            minutes: timeRange.durationMinutes,
+        },
+        title: `Água do casal: ${location}`,
+        description: `Horário: ${scheduleText}\nLocal: ${location}`,
+        location: location,
+        status: 'CONFIRMED',
+        busyStatus: 'BUSY',
+        organizer: {
+            name: 'Água de Víbora',
+            email: 'noreply@agua-vibora.pt',
+        },
+        categories: ['Água de víbora', location],
+        alarms: [
+            {
+                action: 'display',
+                trigger: { hours: ALARM_HOURS_BEFORE, before: true },
+                description: `Água do casal daqui a ${ALARM_HOURS_BEFORE} horas`,
+            },
+        ],
+    }
+}
+
+/**
+ * Creates ICS event objects from a schedule entry
+ *
+ * Handles schedules with multiple time slots separated by "/" (e.g., "9h30 até 10h30 da Noite/13h30 até 17h")
+ * and creates separate events for each time slot.
+ *
+ * Applies the ancestral rule: Events starting after sunset use the PREVIOUS day,
+ * as the "day" began at sunset in the traditional system.
+ *
+ * Uses precise astronomical calculations for Abadim, Cabeceiras de Basto.
+ * Sunset varies: ~21:30 in summer, ~17:00 in winter.
+ *
+ * @param item - Schedule entry
+ * @returns Array of ICS event attributes (one or more)
+ *
+ * @example
+ * // Single event: "25 de junho | Torre | 3h da tarde até ao pôr do sol"
+ * // Returns: [EventAttributes] (1 event)
+ *
+ * @example
+ * // Multiple events: "25 de junho | Passo | 9h30 até 10h30 da Noite/13h30 até 17h"
+ * // Returns: [EventAttributes, EventAttributes] (2 events)
+ */
+const createCalendarEvents = (item: ScheduleEntry): EventAttributes[] => {
+    // Check if schedule contains multiple time slots separated by "/"
+    if (item.schedule.includes('/')) {
+        const timeSlots = item.schedule.split('/').map((slot) => slot.trim())
+        return timeSlots.map((scheduleText) =>
+            createSingleCalendarEvent(scheduleText, item.location, item.date)
+        )
+    }
+
+    // Single time slot
+    return [createSingleCalendarEvent(item.schedule, item.location, item.date)]
+}
+
 /**
  * Generates an iCalendar (.ics) file for Google Calendar integration
- * Special rule: When schedule goes "até à meia noite", the event starts on the PREVIOUS day at sunset
- * Example: If row shows "25 de julho - até à meia noite", event starts on July 24 at sunset
+ *
+ * Ancestral System Rule: In the traditional system, the "day" started at sunset.
+ * Therefore, overnight events (night to early morning) start on the PREVIOUS day.
+ *
  * @param year - The target year
- * @returns ICS file content as string or error
+ * @returns ICS file content as string or error object
+ *
+ * @example
+ * // Table row: "25 de agosto | Passo | 10 da noite até ás 1h30"
+ * // ICS event: August 24, 22:00 → August 25, 01:30
+ *
+ * @example
+ * // Table row: "25 de julho | Figueiredo | Ao pôr do sol até à meia noite"
+ * // ICS event: July 24, 20:30 → July 25, 00:00
  */
 const generateScheduleCalendar = (
     year: number
 ): { error: Error } | { value: string } => {
     const scheduleData = generateScheduleData(year, false)
 
+    // Convert schedule entries to calendar events
+    // Use flatMap to handle multiple events per schedule entry (e.g., "9h30/13h30")
     const events: EventAttributes[] = scheduleData
-        .filter((item) => item.schedule) // Only include entries with schedules
-        .map((item) => {
-            // Parse the time range from the schedule string
-            const timeRange = parseTimeRange(item.schedule)
-
-            // Special rule: If schedule goes until midnight (meia noite / 24h / 00h),
-            // the event actually starts on the PREVIOUS day at sunset
-            const scheduleText = item.schedule.toLowerCase()
-            const isMidnightEnd =
-                scheduleText.includes('meia noite') ||
-                scheduleText.includes('meia-noite') ||
-                scheduleText.includes('24h') ||
-                scheduleText.includes('00h') ||
-                (timeRange.end &&
-                    (timeRange.end.hour === 0 || timeRange.end.hour === 24))
-
-            // Use the previous day if event goes until midnight
-            const eventDate = isMidnightEnd
-                ? new Date(item.date.getTime() - 24 * 60 * 60 * 1000) // Subtract 1 day
-                : item.date
-
-            // If event goes until midnight, start at sunset (~20:30)
-            // Otherwise use the parsed start time
-            const startHour = isMidnightEnd ? 20 : timeRange.start.hour
-            const startMinute = isMidnightEnd ? 30 : timeRange.start.minute
-
-            return {
-                start: [
-                    eventDate.getFullYear(),
-                    eventDate.getMonth() + 1,
-                    eventDate.getDate(),
-                    startHour,
-                    startMinute,
-                ],
-                duration: {
-                    hours: timeRange.durationHours,
-                    minutes: timeRange.durationMinutes,
-                },
-                title: `Água do casal: ${item.location}`,
-                description: `Horário: ${item.schedule}\nLocal: ${item.location}`,
-                location: item.location,
-                status: 'CONFIRMED' as const,
-                busyStatus: 'BUSY' as const,
-                organizer: {
-                    name: 'Água de Víbora',
-                    email: 'noreply@agua-vibora.pt',
-                },
-                categories: ['Água de víbora', item.location],
-                alarms: [
-                    {
-                        action: 'display' as const,
-                        trigger: { hours: 2, before: true },
-                        description: 'Água do casal daqui a 2 horas',
-                    },
-                ],
-            }
-        })
+        .filter((item) => item.schedule) // Only entries with schedules
+        .flatMap(createCalendarEvents)
 
     const result = createEvents(events)
 
@@ -461,7 +623,7 @@ const generateScheduleCalendar = (
         return { error: new Error('Failed to generate calendar') }
     }
 
-    // Ensure proper line endings for better compatibility
+    // Normalize line endings for better compatibility across platforms
     const icsContent = result.value.replace(/\r?\n/g, '\r\n')
 
     return { value: icsContent }

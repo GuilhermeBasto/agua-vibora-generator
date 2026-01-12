@@ -104,6 +104,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                                 description="Ajusta horários e avianças personalizadas conforme a necessidade."
                                 actionLabel="Configurar"
                             />
+
+                            <Card
+                                color="purple"
+                                linkTo="/about"
+                                title="Como Funciona"
+                                description="Descobre a história e funcionamento do sistema de gestão de água."
+                                actionLabel="Saber Mais"
+                            />
                         </div>
                     </div>
                 </div>

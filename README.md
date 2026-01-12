@@ -32,7 +32,7 @@ Uma aplicação web moderna para criar e gerir calendarios de rega para o sistem
 - Eirô
 - Cimo de Aldeia
 - Portela
-- Casa de Baixo
+- Casas de Baixo
 
 ## Estrutura do Projeto
 

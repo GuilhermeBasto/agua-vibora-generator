@@ -41,7 +41,7 @@ export function InfoCard() {
                                 </strong>{' '}
                                 Sistema cobre Torre, Crasto, Passo, Ramada,
                                 Figueiredo, Redondinho, Casa Nova, Eirô, Cimo de
-                                Aldeia, Portela e Casa de Baixo.
+                                Aldeia, Portela e Casas de Baixo.
                             </span>
                         </p>
                     </div>

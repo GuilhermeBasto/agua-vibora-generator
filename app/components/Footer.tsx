@@ -18,6 +18,12 @@ export function Footer() {
                         Voltar ao Topo
                     </a>
                     <a
+                        href="/about"
+                        className="hover:text-cyan-400 transition-colors"
+                    >
+                        Sobre o Sistema
+                    </a>
+                    <a
                         href="mailto:contato@exemplo.com"
                         className="hover:text-cyan-400 transition-colors"
                     >
