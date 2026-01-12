@@ -6,7 +6,7 @@
 import { format } from 'date-fns'
 import { pt } from 'date-fns/locale'
 import ExcelJS from 'exceljs'
-import { createEvents, type EventAttributes } from 'ics'
+import ical, { type ICalEventData } from 'ical-generator'
 import SunCalc from 'suncalc'
 import type { ScheduleEntry } from './types'
 import {
@@ -516,13 +516,13 @@ const startsAfterSunset = (
  * @param scheduleText - The schedule text (e.g., "10 da noite até á 1h30")
  * @param location - Location name
  * @param date - Event date
- * @returns ICS event attributes
+ * @returns ICS event data compatible with ical-generator
  */
 const createSingleCalendarEvent = (
     scheduleText: string,
     location: string,
     date: Date
-): EventAttributes => {
+): ICalEventData => {
     const timeRange = parseTimeRange(scheduleText)
     const usePreviousDay = startsAfterSunset(timeRange.start, date)
 
@@ -535,59 +535,28 @@ const createSingleCalendarEvent = (
     const startHour = timeRange.start.hour
     const startMinute = timeRange.start.minute
 
-    // Calculate end time for Android compatibility (prefer DTEND over DURATION)
+    // Calculate end time using Date objects
+    const startDate = new Date(eventDate)
+    startDate.setHours(startHour, startMinute, 0, 0)
+
     const totalMinutes =
         timeRange.durationHours * 60 + timeRange.durationMinutes
-    const endDate = new Date(eventDate.getTime())
-    endDate.setHours(startHour, startMinute + totalMinutes, 0, 0)
-
-    // Generate unique UID for Android compatibility
-    // Format: timestamp-location-date@agua-vibora.pt
-    const uid = `${eventDate.getTime()}-${location.replace(/\s+/g, '-')}-${startHour}${startMinute}@agua-vibora.pt`
+    const endDate = new Date(startDate.getTime() + totalMinutes * 60 * 1000)
 
     return {
-        start: [
-            eventDate.getFullYear(),
-            eventDate.getMonth() + 1,
-            eventDate.getDate(),
-            startHour,
-            startMinute,
-        ],
-        // Use end time instead of duration for better Android compatibility
-        end: [
-            endDate.getFullYear(),
-            endDate.getMonth() + 1,
-            endDate.getDate(),
-            endDate.getHours(),
-            endDate.getMinutes(),
-        ],
-        title: `Água do casal: ${location}`,
+        start: startDate,
+        end: endDate,
+        summary: `Água do casal: ${location}`,
         description: `Horário: ${scheduleText}\nLocal: ${location}`,
         location: location,
-        status: 'CONFIRMED',
-        busyStatus: 'BUSY',
         organizer: {
             name: 'Água de Víbora',
             email: 'noreply@agua-vibora.pt',
         },
-        categories: ['Água de víbora', location],
-        uid: uid,
-        sequence: 0,
-        productId: 'agua-vibora-generator',
-        calName: 'Água de Víbora',
-        startInputType: 'local',
-        startOutputType: 'local',
-        endInputType: 'local',
-        endOutputType: 'local',
+        categories: [{ name: 'Água de víbora' }, { name: location }],
         alarms: [
             {
-                action: 'display',
-                description: `Água do casal: ${location}`,
-                trigger: {
-                    hours: ALARM_HOURS_BEFORE,
-                    minutes: 0,
-                    before: true,
-                },
+                trigger: ALARM_HOURS_BEFORE * 60 * 60, // 2 hours before in seconds
             },
         ],
     }
@@ -606,17 +575,17 @@ const createSingleCalendarEvent = (
  * Sunset varies: ~21:30 in summer, ~17:00 in winter.
  *
  * @param item - Schedule entry
- * @returns Array of ICS event attributes (one or more)
+ * @returns Array of ICS event data (one or more)
  *
  * @example
  * // Single event: "25 de junho | Torre | 3h da tarde até ao pôr do sol"
- * // Returns: [EventAttributes] (1 event)
+ * // Returns: [ICalEventData] (1 event)
  *
  * @example
  * // Multiple events: "25 de junho | Passo | 9h30 até 10h30 da Noite/13h30 até 17h"
- * // Returns: [EventAttributes, EventAttributes] (2 events)
+ * // Returns: [ICalEventData, ICalEventData] (2 events)
  */
-const createCalendarEvents = (item: ScheduleEntry): EventAttributes[] => {
+const createCalendarEvents = (item: ScheduleEntry): ICalEventData[] => {
     // Check if schedule contains multiple time slots separated by "/"
     if (item.schedule.includes('/')) {
         const timeSlots = item.schedule.split('/').map((slot) => slot.trim())
@@ -630,7 +599,7 @@ const createCalendarEvents = (item: ScheduleEntry): EventAttributes[] => {
 }
 
 /**
- * Generates an iCalendar (.ics) file for Google Calendar integration
+ * Generates an iCalendar (.ics) file for Google Calendar integration using ical-generator
  *
  * Ancestral System Rule: In the traditional system, the "day" started at sunset.
  * Therefore, overnight events (night to early morning) start on the PREVIOUS day.
@@ -649,50 +618,43 @@ const createCalendarEvents = (item: ScheduleEntry): EventAttributes[] => {
 const generateScheduleCalendar = (
     year: number
 ): { error: Error } | { value: string } => {
-    const scheduleData = generateScheduleData(year, false)
+    try {
+        const scheduleData = generateScheduleData(year, false)
 
-    // Convert schedule entries to calendar events
-    // Use flatMap to handle multiple events per schedule entry (e.g., "9h30/13h30")
-    const events: EventAttributes[] = scheduleData
-        .filter((item) => item.schedule) // Only entries with schedules
-        .flatMap(createCalendarEvents)
+        // Create calendar using ical-generator (better mobile compatibility)
+        const calendar = ical({
+            name: `Água de Víbora ${year}`,
+            prodId: {
+                company: 'Água de Víbora',
+                product: 'agua-vibora-generator',
+                language: 'PT',
+            },
+            timezone: 'Europe/Lisbon',
+        })
 
-    // Configure calendar with Android-friendly settings
-    const result = createEvents(events, {
-        productId: '-//Água de Víbora//agua-vibora-generator//PT',
-        calName: `Água de Víbora ${year}`,
-    })
+        // Convert schedule entries to calendar events
+        // Use flatMap to handle multiple events per schedule entry (e.g., "9h30/13h30")
+        const events: ICalEventData[] = scheduleData
+            .filter((item) => item.schedule) // Only entries with schedules
+            .flatMap(createCalendarEvents)
 
-    if (result.error) {
-        return { error: result.error }
+        // Add all events to calendar
+        events.forEach((eventData) => {
+            calendar.createEvent(eventData)
+        })
+
+        // Generate ICS content
+        const icsContent = calendar.toString()
+
+        return { value: icsContent }
+    } catch (error) {
+        return {
+            error:
+                error instanceof Error
+                    ? error
+                    : new Error('Failed to generate calendar'),
+        }
     }
-
-    if (!result.value) {
-        return { error: new Error('Failed to generate calendar') }
-    }
-
-    // Normalize line endings for better compatibility across platforms
-    // Android requires CRLF (\r\n) line endings
-    let icsContent = result.value.replace(/\r?\n/g, '\r\n')
-
-    // Ensure proper ICS structure for Android
-    // Add CALSCALE and METHOD if not present
-    if (!icsContent.includes('CALSCALE:')) {
-        icsContent = icsContent.replace(
-            'VERSION:2.0',
-            'VERSION:2.0\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH'
-        )
-    }
-
-    // Ensure X-WR-CALNAME is present for calendar name
-    if (!icsContent.includes('X-WR-CALNAME:')) {
-        icsContent = icsContent.replace(
-            'METHOD:PUBLISH',
-            `METHOD:PUBLISH\r\nX-WR-CALNAME:Água de Víbora ${year}\r\nX-WR-TIMEZONE:Europe/Lisbon`
-        )
-    }
-
-    return { value: icsContent }
 }
 
 export {
